@@ -15,12 +15,11 @@ int main(int argc, const char * argv[])
 {
     if(argc <= 1)
     {
-        std::cout << "Jenkins Controller v" << VERSION << "\nUse jc help to see all available commands\nWarning, current version doesn't protect from SQL injection.";
+        std::cout << "Jenkins Controller version " << VERSION << "\nUse jc help to see all available commands\nWarning, current version doesn't protect from SQL injection.\n";
 #warning TODO: use prepared statements to protect from SQL injection
         return 0;
     }
     std::string command = argv[1];
-    jc::Controller* controller = new jc::Controller();
     if(command == "help")
     {
         if(argc == 2 || (argc == 3 && std::string(argv[2]) == "help"))
@@ -107,7 +106,7 @@ int main(int argc, const char * argv[])
                 std::cout << "  [device-id] is the unique device ID\n";
                 std::cout << "  [model] is the device model (string)\n";
                 std::cout << "  [OS Version] is the device OS Version (string)\n";
-                std::cout << "Usage jc register app [app-name] [app-id]";
+                std::cout << "Usage jc register app [app-name] [app-id]\n";
                 std::cout << "  [app-name] is the short app name, must match Jenkins config\n";
                 std::cout << "  [app-id] is the unique app ID\n";
             }
@@ -117,10 +116,10 @@ int main(int argc, const char * argv[])
                 std::cout << "Usage jc update device [device] [OS Version]\n";
                 std::cout << "  [device] is the  device name\n";
                 std::cout << "  [OS Version] is the new device OS version (string)\n";
-                std::cout << "Usage jc update app [app] [version]";
+                std::cout << "Usage jc update app [app] [version]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [version] is the new app version. Must be an integer\n";
-                std::cout << "Usage jc update install [app] [device] [version]";
+                std::cout << "Usage jc update install [app] [device] [version]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [device] is the  device name\n";
                 std::cout << "  [version] (optional) is the installed app version. Must be an integer\n";
@@ -130,16 +129,26 @@ int main(int argc, const char * argv[])
                 std::cout << "Remove an app, device or install informations\n";
                 std::cout << "Usage jc remove device [device]\n";
                 std::cout << "  [device] is the  device name\n";
-                std::cout << "Usage jc remove app [app]";
+                std::cout << "Usage jc remove app [app]\n";
                 std::cout << "  [app] is the app name\n";
-                std::cout << "Usage jc remove install [app] [device]";
+                std::cout << "Usage jc remove install [app] [device]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [device] is the  device name\n";
             }
             std::cout << "Command unknown";
         }
+        return 0;
     }
-    else if(command == "build")
+    jc::Controller* controller = NULL;
+    try
+    {
+        controller = new jc::Controller();
+    }
+    catch (...)
+    {
+        std::cout << "Error initializing DB, aborting\n";
+    }
+    if(command == "build")
     {
         std::cout << "Not implemented yet";
     }
@@ -173,7 +182,32 @@ int main(int argc, const char * argv[])
     }
     else if(command == "register")
     {
-        std::cout << "Not implemented yet";
+        if(argc < 3)
+        {
+            std::cout << "missing arguments for command register, see jc help register\n";
+        }
+        else
+        {
+            std::string commandDetail = argv[2];
+            if(commandDetail == "app")
+            {
+                if(argc >= 5)
+                {
+                    if(argc >= 6 && atoi(argv[5]) > 0)
+                    {
+                        controller->addApp(argv[3], argv[4], atoi(argv[5]));
+                    }
+                    else
+                    {
+                        controller->addApp(argv[3], argv[4]);
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command register app, see jc help register\n";
+                }
+            }
+        }
     }
     else if(command == "udpate")
     {
@@ -187,7 +221,7 @@ int main(int argc, const char * argv[])
     {
         std::cout << "jc: '" << command << "' is not a jc command. See 'jc help'.\n";
     }
-    
+    delete(controller);
     return 0;
 }
 

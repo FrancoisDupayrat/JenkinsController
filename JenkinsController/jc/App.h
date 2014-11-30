@@ -17,11 +17,16 @@ NS_JC
 class App
 {
 public:
-    App(std::string name, std::string identifier);
+    App(std::string name, std::string identifier, int version = 1);
     ~App();
     void update(int newVersion);
+    
+    std::string getName();
+    std::string getIdentifier();
     int getLastVersion();
     
+    static std::string getTableFormat();
+    std::string getInsertSQL(std::string tableName);
 private:
     App() { }
     

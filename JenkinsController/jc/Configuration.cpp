@@ -48,9 +48,9 @@ std::string Configuration::getTableFormat()
     "VERSION        INT     NOT NULL);";
 }
 
-std::string Configuration::getInsertSQL()
+std::string Configuration::getInsertSQL(std::string tableName)
 {
-    return "VALUES (1, '" + remoteUrl + "', 1, " CONFIGURATION_VERSION ");";
+    return "INSERT INTO " + tableName + " (ID, URL, LOCAL, VERSION) VALUES (1, '" + remoteUrl + "', 1, " CONFIGURATION_VERSION ");";
 }
 
 bool Configuration::loadFromSQL(int argc, char** argv)

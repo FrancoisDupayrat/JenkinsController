@@ -27,7 +27,7 @@ public:
     void setRemote(std::string url);
     
     static std::string getTableFormat();
-    std::string getInsertSQL();
+    std::string getInsertSQL(std::string tableName);
     //return true if the configuration version changed
     bool loadFromSQL(int argc, char** argv);
 private:

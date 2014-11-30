@@ -22,6 +22,7 @@ class Controller
 {
 public:
     Controller();
+    bool addApp(std::string appName, std::string appIdentifier, int version = 1);
 private:
     bool loadConfiguration();
     Configuration* conf;

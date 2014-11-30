@@ -14,7 +14,11 @@ using namespace std;
 
 Controller::Controller()
 {
-    loadConfiguration();
+    conf = nullptr;
+    if(!loadConfiguration())
+    {
+        throw;
+    }
 }
 
 //Helper define to avoid repeating the error checking
@@ -24,10 +28,64 @@ sqlite3_free(errorMessage);\
 sqlite3_close(db);\
 return false; }
 
+
+bool Controller::addApp(std::string appName, std::string appIdentifier, int version)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    
+    bool tableExists = false;
+    result = sqlite3_exec(db,
+                          "SELECT name FROM sqlite_master WHERE type='table' AND name='app';",
+                          [](void *tableExists, int argc, char **argv, char **azColName)
+                          {
+                              *(bool*)tableExists = true;
+                              return 0;
+                          },
+                          &tableExists,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR
+    if(!tableExists)
+    {
+        result = sqlite3_exec(db,
+                              ("CREATE TABLE app" + App::getTableFormat()).c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR
+        std::cout << "Table created";
+    }
+    
+    App app(appName, appIdentifier, version);
+    
+    result = sqlite3_exec(db,
+                          app.getInsertSQL("app").c_str(),
+                          [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                          0,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR
+    
+    sqlite3_close(db);
+    std::cout << "Added app " << app.getName() << "\n";
+    return true;
+}
+
 bool Controller::loadConfiguration()
 {
     sqlite3 *db;
     char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
     
     if(conf != nullptr)
     {
@@ -36,27 +94,19 @@ bool Controller::loadConfiguration()
     }
     conf = new Configuration();
     
-    int result = sqlite3_open("jc.db", &db);
-    
-    if(result)
-    {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return false;
-    }
-    bool hasResult = false;
+    bool tableExists = false;
     result = sqlite3_exec(db,
                           "SELECT name FROM sqlite_master WHERE type='table' AND name='configuration';",
-                          [](void *hasResult, int argc, char **argv, char **azColName)
+                          [](void *tableExists, int argc, char **argv, char **azColName)
                           {
-                              *(bool*)hasResult = true;
+                              *(bool*)tableExists = true;
                               return 0;
                           },
-                          &hasResult,
+                          &tableExists,
                           &errorMessage);
-    
     RETURN_ON_SQL_ERROR
     
-    if(!hasResult)
+    if(!tableExists)
     {
         result = sqlite3_exec(db,
                               ("CREATE TABLE configuration" + Configuration::getTableFormat()).c_str(),
@@ -66,8 +116,7 @@ bool Controller::loadConfiguration()
         RETURN_ON_SQL_ERROR
         
         result = sqlite3_exec(db,
-                              ("INSERT INTO configuration (ID, URL, LOCAL, VERSION)"  \
-                              "VALUES " + conf->getInsertSQL()).c_str(),
+                              conf->getInsertSQL("configuration").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
