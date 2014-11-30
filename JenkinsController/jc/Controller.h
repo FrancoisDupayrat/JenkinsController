@@ -28,13 +28,23 @@ public:
     bool updateApp(std::string appName, int version);
     bool removeApp(std::string appName);
     std::vector<App> getAllApps();
+    App getApp(std::string name);
     
     bool addDevice(std::string deviceName, std::string deviceIdentifier, std::string model, std::string osVersion);
     bool updateDevice(std::string deviceName, std::string osVersion);
     bool removeDevice(std::string deviceName);
     std::vector<Device> getAllDevices();
+    Device getDevice(std::string name);
+    
+    bool updateInstall(std::string appName, std::string deviceName, int version = -1);
+    bool removeInstall(std::string appName, std::string deviceName);
+    std::vector<Install> getAllAppInstall(std::string appName);
+    std::vector<Install> getAllDeviceInstall(std::string deviceName);
 private:
     bool loadConfiguration();
+    bool checkAppTableExist(sqlite3 *db);
+    bool checkDeviceTableExist(sqlite3 *db);
+    bool checkInstallTableExist(sqlite3 *db);
     Configuration* conf;
 };
 

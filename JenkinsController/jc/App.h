@@ -19,6 +19,7 @@ class App
 public:
     App(std::string name, std::string identifier, int version = 1);
     App(int argc, char** argv);
+    App() { }
     ~App();
     void update(int newVersion);
     
@@ -29,9 +30,8 @@ public:
     static std::string getTableFormat();
     std::string getInsertSQL(std::string tableName);
     static std::string getUpdateVersionSQL(std::string name, int version);
-    static std::string getDeleteSQL(std::string name);
+    static std::string getWhereSQL(std::string name);
 private:
-    App() { }
     
     std::string name;
     std::string identifier;

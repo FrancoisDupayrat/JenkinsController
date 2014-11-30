@@ -39,27 +39,7 @@ bool Controller::addApp(std::string appName, std::string appIdentifier, int vers
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     }
-    
-    bool tableExists = false;
-    result = sqlite3_exec(db,
-                          "SELECT name FROM sqlite_master WHERE type='table' AND name='app';",
-                          [](void *tableExists, int argc, char **argv, char **azColName)
-                          {
-                              *(bool*)tableExists = true;
-                              return 0;
-                          },
-                          &tableExists,
-                          &errorMessage);
-    RETURN_ON_SQL_ERROR(false)
-    if(!tableExists)
-    {
-        result = sqlite3_exec(db,
-                              ("CREATE TABLE app" + App::getTableFormat()).c_str(),
-                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
-                              0,
-                              &errorMessage);
-        RETURN_ON_SQL_ERROR(false)
-    }
+    if(!checkAppTableExist(db)) return false;
     
     App app(appName, appIdentifier, version);
     
@@ -84,6 +64,7 @@ bool Controller::updateApp(std::string appName, int version)
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     }
+    if(!checkAppTableExist(db)) return false;
     
     result = sqlite3_exec(db,
                           ("UPDATE app " + App::getUpdateVersionSQL(appName, version)).c_str(),
@@ -107,9 +88,10 @@ bool Controller::removeApp(std::string appName)
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     }
+    if(!checkAppTableExist(db)) return false;
     
     result = sqlite3_exec(db,
-                          ("DELETE FROM app " + App::getDeleteSQL(appName)).c_str(),
+                          ("DELETE FROM app " + App::getWhereSQL(appName) + ";").c_str(),
                           [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                           0,
                           &errorMessage);
@@ -130,6 +112,7 @@ std::vector<App> Controller::getAllApps()
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return registeredApps;
     }
+    if(!checkAppTableExist(db)) return registeredApps;
     
     result = sqlite3_exec(db,
                           "SELECT * FROM app;",
@@ -147,6 +130,35 @@ std::vector<App> Controller::getAllApps()
     return registeredApps;
 }
 
+App Controller::getApp(std::string name)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return App();
+    }
+    if(!checkAppTableExist(db)) return App();
+    
+    std::vector<App> matchingApp;
+    result = sqlite3_exec(db,
+                          ("SELECT * FROM app " + App::getWhereSQL(name) + ";").c_str(),
+                          [](void *ptr, int argc, char **argv, char **azColName)
+                          {
+                              std::vector<App>* matchingApp = (std::vector<App>*)ptr;
+                              matchingApp->push_back(App(argc, argv));
+                              return 0;
+                          },
+                          &matchingApp,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(App())
+    
+    
+    return matchingApp.size() > 0 ? matchingApp[0] : App();
+}
+
 bool Controller::addDevice(std::string deviceName, std::string deviceIdentifier, std::string model, std::string osVersion)
 {
     sqlite3 *db;
@@ -157,27 +169,7 @@ bool Controller::addDevice(std::string deviceName, std::string deviceIdentifier,
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     }
-    
-    bool tableExists = false;
-    result = sqlite3_exec(db,
-                          "SELECT name FROM sqlite_master WHERE type='table' AND name='device';",
-                          [](void *tableExists, int argc, char **argv, char **azColName)
-                          {
-                              *(bool*)tableExists = true;
-                              return 0;
-                          },
-                          &tableExists,
-                          &errorMessage);
-    RETURN_ON_SQL_ERROR(false)
-    if(!tableExists)
-    {
-        result = sqlite3_exec(db,
-                              ("CREATE TABLE device" + Device::getTableFormat()).c_str(),
-                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
-                              0,
-                              &errorMessage);
-        RETURN_ON_SQL_ERROR(false)
-    }
+    if(!checkDeviceTableExist(db)) return false;
     
     Device device(deviceName, deviceIdentifier, model, osVersion);
     
@@ -202,6 +194,7 @@ bool Controller::updateDevice(std::string deviceName, std::string osVersion)
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     }
+    if(!checkDeviceTableExist(db)) return false;
     
     result = sqlite3_exec(db,
                           ("UPDATE device " + Device::getUpdateVersionSQL(deviceName, osVersion)).c_str(),
@@ -225,9 +218,10 @@ bool Controller::removeDevice(std::string deviceName)
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     }
+    if(!checkDeviceTableExist(db)) return false;
     
     result = sqlite3_exec(db,
-                          ("DELETE FROM device " + Device::getDeleteSQL(deviceName)).c_str(),
+                          ("DELETE FROM device " + Device::getWhereSQL(deviceName) + ";").c_str(),
                           [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                           0,
                           &errorMessage);
@@ -248,6 +242,7 @@ std::vector<Device> Controller::getAllDevices()
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return registeredDevices;
     }
+    if(!checkDeviceTableExist(db)) return registeredDevices;
     
     result = sqlite3_exec(db,
                           "SELECT * FROM device;",
@@ -263,6 +258,168 @@ std::vector<Device> Controller::getAllDevices()
     
     
     return registeredDevices;
+}
+
+Device Controller::getDevice(std::string name)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return Device();
+    }
+    if(!checkDeviceTableExist(db)) return Device();
+    
+    std::vector<Device> matchingDevice;
+    result = sqlite3_exec(db,
+                          ("SELECT * FROM device " + Device::getWhereSQL(name) + ";").c_str(),
+                          [](void *ptr, int argc, char **argv, char **azColName)
+                          {
+                              std::vector<Device>* matchingDevice = (std::vector<Device>*)ptr;
+                              matchingDevice->push_back(Device(argc, argv));
+                              return 0;
+                          },
+                          &matchingDevice,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(Device())
+    
+    
+    return matchingDevice.size() > 0 ? matchingDevice[0] : Device();
+}
+
+bool Controller::updateInstall(std::string appName, std::string deviceName, int version)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    if(!checkInstallTableExist(db)) return false;
+    
+    bool installExist = false;
+    result = sqlite3_exec(db,
+                          ("SELECT * FROM install " + Install::getWhereSQL(appName, deviceName) + ";").c_str(),
+                          [](void *installExist, int argc, char **argv, char **azColName)
+                          {
+                              *(bool*)installExist = true;
+                              return 0;
+                          },
+                          &installExist,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    App app = getApp(appName);
+    if(version <= 0)
+    {
+        version = app.getLastVersion();
+    }
+    
+    if(installExist)
+    {
+        result = sqlite3_exec(db,
+                              ("UPDATE install " + Install::getUpdateVersionSQL(appName, deviceName, version)).c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR(false)
+    }
+    else
+    {
+        Install install(app, getDevice(deviceName), version);
+        result = sqlite3_exec(db,
+                              install.getInsertSQL("install").c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR(false)
+    }
+    
+    sqlite3_close(db);
+    return true;
+}
+
+bool Controller::removeInstall(std::string appName, std::string deviceName)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    if(!checkDeviceTableExist(db)) return false;
+    
+    result = sqlite3_exec(db,
+                          ("DELETE FROM install " + Install::getWhereSQL(appName, deviceName) + ";").c_str(),
+                          [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                          0,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    sqlite3_close(db);
+    return true;
+}
+
+std::vector<Install> Controller::getAllAppInstall(std::string appName)
+{
+    std::vector<Install> installs;
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return installs;
+    }
+    if(!checkInstallTableExist(db)) return installs;
+    
+    result = sqlite3_exec(db,
+                          ("SELECT * FROM install " + Install::getAllAppWhereSQL(appName) + ";").c_str(),
+                          [](void *ptr, int argc, char **argv, char **azColName)
+                          {
+                              std::vector<Install>* installs = (std::vector<Install>*)ptr;
+                              installs->push_back(Install(argc, argv));
+                              return 0;
+                          },
+                          &installs,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(installs)
+    
+    return installs;
+}
+
+std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
+{
+    std::vector<Install> installs;
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return installs;
+    }
+    if(!checkInstallTableExist(db)) return installs;
+    
+    result = sqlite3_exec(db,
+                          ("SELECT * FROM install " + Install::getAllDeviceWhereSQL(deviceName) + ";").c_str(),
+                          [](void *ptr, int argc, char **argv, char **azColName)
+                          {
+                              std::vector<Install>* installs = (std::vector<Install>*)ptr;
+                              installs->push_back(Install(argc, argv));
+                              return 0;
+                          },
+                          &installs,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(installs)
+    
+    return installs;
 }
 
 bool Controller::loadConfiguration()
@@ -326,5 +483,83 @@ bool Controller::loadConfiguration()
         RETURN_ON_SQL_ERROR(false)
     }
     sqlite3_close(db);
+    return true;
+}
+
+bool Controller::checkAppTableExist(sqlite3 *db)
+{
+    char *errorMessage = 0;
+    bool tableExists = false;
+    int result = sqlite3_exec(db,
+                              "SELECT name FROM sqlite_master WHERE type='table' AND name='app';",
+                              [](void *tableExists, int argc, char **argv, char **azColName)
+                              {
+                                  *(bool*)tableExists = true;
+                                  return 0;
+                              },
+                              &tableExists,
+                              &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    if(!tableExists)
+    {
+        result = sqlite3_exec(db,
+                              ("CREATE TABLE app" + App::getTableFormat()).c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR(false)
+    }
+    return true;
+}
+
+bool Controller::checkDeviceTableExist(sqlite3 *db)
+{
+    char *errorMessage = 0;
+    bool tableExists = false;
+    int result = sqlite3_exec(db,
+                              "SELECT name FROM sqlite_master WHERE type='table' AND name='install';",
+                              [](void *tableExists, int argc, char **argv, char **azColName)
+                              {
+                                  *(bool*)tableExists = true;
+                                  return 0;
+                              },
+                              &tableExists,
+                              &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    if(!tableExists)
+    {
+        result = sqlite3_exec(db,
+                              ("CREATE TABLE install" + Device::getTableFormat()).c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR(false)
+    }
+    return true;
+}
+
+bool Controller::checkInstallTableExist(sqlite3 *db)
+{
+    char *errorMessage = 0;
+    bool tableExists = false;
+    int result = sqlite3_exec(db,
+                              "SELECT name FROM sqlite_master WHERE type='table' AND name='install';",
+                              [](void *tableExists, int argc, char **argv, char **azColName)
+                              {
+                                  *(bool*)tableExists = true;
+                                  return 0;
+                              },
+                              &tableExists,
+                              &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    if(!tableExists)
+    {
+        result = sqlite3_exec(db,
+                              ("CREATE TABLE install" + Install::getTableFormat()).c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR(false)
+    }
     return true;
 }

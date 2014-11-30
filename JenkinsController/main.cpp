@@ -218,11 +218,51 @@ int main(int argc, const char * argv[])
     }
     else if(command == "device")
     {
-        std::cout << "Not implemented yet";
+        if(argc >= 3)
+        {
+            std::string deviceName = argv[2];
+            std::vector<jc::Install> installs = controller->getAllDeviceInstall(deviceName);
+            if(installs.size() > 0)
+            {
+                std::cout << "Apps on " << deviceName << ":\n";
+                for(jc::Install install : installs)
+                {
+                    std::cout << install.getApp().getName() << ", version " + std::to_string(install.getAppVersion()) << "\n";
+                }
+            }
+            else
+            {
+                std::cout << "No app installed on " << deviceName << "\n";
+            }
+        }
+        else
+        {
+            std::cout << "Please specify a device\n";
+        }
     }
     else if(command == "app")
     {
-        std::cout << "Not implemented yet";
+        if(argc >= 3)
+        {
+            std::string appName = argv[2];
+            std::vector<jc::Install> installs = controller->getAllAppInstall(appName);
+            if(installs.size() > 0)
+            {
+                std::cout << "Installs for " << appName << ":\n";
+                for(jc::Install install : installs)
+                {
+                    std::cout << install.getDevice().getName() << ", version " + std::to_string(install.getAppVersion()) << "\n";
+                }
+            }
+            else
+            {
+                std::cout << "No install for " << appName << "\n";
+            }
+        }
+        else
+        {
+            std::cout << "Please specify an app\n";
+        }
     }
     else if(command == "configure")
     {
@@ -283,6 +323,10 @@ int main(int argc, const char * argv[])
                     std::cout << "missing arguments for command register device, see jc help register\n";
                 }
             }
+            else
+            {
+                std::cout << "unknown command register " + commandDetail + ", use jc help register to see all options\n";
+            }
         }
     }
     else if(command == "update")
@@ -337,6 +381,44 @@ int main(int argc, const char * argv[])
                     std::cout << "missing arguments for command update device, see jc help update\n";
                 }
             }
+            else if(commandDetail == "install")
+            {
+                if(argc >= 5)
+                {
+                    bool result = false;
+                    if(argc >= 6)
+                    {
+                        if(atoi(argv[5]) > 0)
+                        {
+                            result = controller->updateInstall(argv[3], argv[4], atoi(argv[5]));
+                        }
+                        else
+                        {
+                            std::cout << "The version must be > 0";
+                        }
+                    }
+                    else
+                    {
+                        result = controller->updateInstall(argv[3], argv[4]);
+                    }
+                    if(result)
+                    {
+                        std::cout << "Updated install for app " << argv[3] << " on device " << argv[4] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the install was not updated\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command update install, see jc help update\n";
+                }
+            }
+            else
+            {
+                std::cout << "unknown command update " + commandDetail + ", use jc help update to see all options\n";
+            }
         }
     }
     else if(command == "remove")
@@ -383,6 +465,28 @@ int main(int argc, const char * argv[])
                 {
                     std::cout << "missing arguments for command remove device, see jc help remove\n";
                 }
+            }
+            else if(commandDetail == "install")
+            {
+                if(argc >= 5)
+                {
+                    if(controller->removeInstall(argv[3], argv[4]))
+                    {
+                        std::cout << "Removed install for app " << argv[3] << " on device " << argv[4] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the install was not removed\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command remove install, see jc help remove\n";
+                }
+            }
+            else
+            {
+                std::cout << "unknown command remove " + commandDetail + ", use jc help remove to see all options\n";
             }
         }
     }

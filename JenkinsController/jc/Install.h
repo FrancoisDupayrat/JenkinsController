@@ -19,17 +19,27 @@ NS_JC
 class Install
 {
 public:
-    Install(App* app, Device* device, int appVersion = -1);
+    Install(App app, Device device, int appVersion = -1);
+    Install(int argc, char** argv);
+    Install() { }
     ~Install();
     void update(int newAppVersion);
     
-private:
-    Install() { }
+    App& getApp();
+    Device& getDevice();
+    int getAppVersion();
     
-    App* app;
-    Device* device;
+    static std::string getTableFormat();
+    std::string getInsertSQL(std::string tableName);
+    static std::string getUpdateVersionSQL(std::string app, std::string device, int version);
+    static std::string getWhereSQL(std::string app, std::string device);
+    static std::string getAllAppWhereSQL(std::string app);
+    static std::string getAllDeviceWhereSQL(std::string device);
+private:
+    
+    App app;
+    Device device;
     int appVersion;
-    unsigned long id_;
 };
 
 NS_JC_END

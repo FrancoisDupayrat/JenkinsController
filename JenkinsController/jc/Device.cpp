@@ -75,7 +75,7 @@ std::string Device::getUpdateVersionSQL(std::string name, std::string osVersion)
     return "SET VERSION=" + osVersion + " WHERE NAME='" + name + "';";
 }
 
-std::string Device::getDeleteSQL(std::string name)
+std::string Device::getWhereSQL(std::string name)
 {
-    return "WHERE NAME='" + name + "';";
+    return "WHERE NAME='" + name + "'";
 }

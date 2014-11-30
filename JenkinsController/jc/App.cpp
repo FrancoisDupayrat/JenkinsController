@@ -67,7 +67,7 @@ std::string App::getUpdateVersionSQL(std::string name, int version)
     return "SET VERSION=" + std::to_string(version) + " WHERE NAME='" + name + "';";
 }
 
-std::string App::getDeleteSQL(std::string name)
+std::string App::getWhereSQL(std::string name)
 {
-    return "WHERE NAME='" + name + "';";
+    return "WHERE NAME='" + name + "'";
 }
