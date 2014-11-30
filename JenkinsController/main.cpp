@@ -268,7 +268,32 @@ int main(int argc, const char * argv[])
     }
     else if(command == "remove")
     {
-        std::cout << "Not implemented yet";        
+        if(argc < 3)
+        {
+            std::cout << "missing arguments for command update, see jc help update\n";
+        }
+        else
+        {
+            std::string commandDetail = argv[2];
+            if(commandDetail == "app")
+            {
+                if(argc >= 4)
+                {
+                    if(controller->removeApp(argv[3]))
+                    {
+                        std::cout << "Removed app " << argv[3] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the app was not removed\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command remove app, see jc help remove\n";
+                }
+            }
+        }
     }
     else
     {

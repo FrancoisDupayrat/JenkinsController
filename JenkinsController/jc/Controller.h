@@ -25,6 +25,7 @@ public:
     Controller();
     bool addApp(std::string appName, std::string appIdentifier, int version = 1);
     bool updateApp(std::string appName, int version);
+    bool removeApp(std::string appName);
     std::vector<App> getAllApps();
 private:
     bool loadConfiguration();

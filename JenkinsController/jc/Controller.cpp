@@ -76,7 +76,6 @@ bool Controller::addApp(std::string appName, std::string appIdentifier, int vers
 
 bool Controller::updateApp(std::string appName, int version)
 {
-    
     sqlite3 *db;
     char *errorMessage = 0;
     int result = sqlite3_open("jc.db", &db);
@@ -88,6 +87,29 @@ bool Controller::updateApp(std::string appName, int version)
     
     result = sqlite3_exec(db,
                           ("UPDATE app " + App::getUpdateVersionSQL(appName, version)).c_str(),
+                          [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                          0,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    sqlite3_close(db);
+    return true;
+}
+
+
+bool Controller::removeApp(std::string appName)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    
+    result = sqlite3_exec(db,
+                          ("DELETE FROM app " + App::getDeleteSQL(appName)).c_str(),
                           [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                           0,
                           &errorMessage);
