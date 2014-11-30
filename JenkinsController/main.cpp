@@ -163,29 +163,41 @@ int main(int argc, const char * argv[])
     else if(command == "devices")
     {
         bool verbose = false;
-        if((argc >= 3 && std::string(argv[2]) == "-v") || (argc >= 4 && std::string(argv[3]) == "-v"))
+        bool all = false;
+        for(int i = 2; i < argc; i++)
         {
-            verbose = true;
-        }
-        if((argc >= 3 && std::string(argv[2]) == "-all") || (argc >= 4 && std::string(argv[3]) == "-all"))
-        {
-            std::cout << "All option not implemented yet\n";
-        }
-        std::vector<jc::Device> devices = controller->getAllDevices();
-        if(devices.size() == 0)
-        {
-            std::cout << "No device registered\n";
-        }
-        for(jc::Device device : devices)
-        {
-            if(verbose)
+            std::string arg = argv[i];
+            if(arg == "-v")
             {
-                std::cout << device.getName() << "  |  " << device.getModel() << "  |  " << device.getOsVersion() << "  |  " << device.getIdentifier() << "\n";
+                verbose = true;
             }
-            else
+            else if (arg == "-all")
             {
-                std::cout << device.getName() << "\n";
+                all = true;
             }
+        }
+        if(all)
+        {
+            std::vector<jc::Device> devices = controller->getAllDevices();
+            if(devices.size() == 0)
+            {
+                std::cout << "No device registered\n";
+            }
+            for(jc::Device device : devices)
+            {
+                if(verbose)
+                {
+                    std::cout << device.getName() << "  |  " << device.getModel() << "  |  " << device.getOsVersion() << "  |  " << device.getIdentifier() << "\n";
+                }
+                else
+                {
+                    std::cout << device.getName() << "\n";
+                }
+            }
+        }
+        else
+        {
+            std::cout << "Only -all option is implemented for now, connected devices is not available\n";
         }
     }
     else if(command == "apps")
