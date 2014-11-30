@@ -147,6 +147,124 @@ std::vector<App> Controller::getAllApps()
     return registeredApps;
 }
 
+bool Controller::addDevice(std::string deviceName, std::string deviceIdentifier, std::string model, std::string osVersion)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    
+    bool tableExists = false;
+    result = sqlite3_exec(db,
+                          "SELECT name FROM sqlite_master WHERE type='table' AND name='device';",
+                          [](void *tableExists, int argc, char **argv, char **azColName)
+                          {
+                              *(bool*)tableExists = true;
+                              return 0;
+                          },
+                          &tableExists,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    if(!tableExists)
+    {
+        result = sqlite3_exec(db,
+                              ("CREATE TABLE device" + Device::getTableFormat()).c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+        RETURN_ON_SQL_ERROR(false)
+    }
+    
+    Device device(deviceName, deviceIdentifier, model, osVersion);
+    
+    result = sqlite3_exec(db,
+                          device.getInsertSQL("device").c_str(),
+                          [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                          0,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    sqlite3_close(db);
+    return true;
+}
+
+bool Controller::updateDevice(std::string deviceName, std::string osVersion)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    
+    result = sqlite3_exec(db,
+                          ("UPDATE device " + Device::getUpdateVersionSQL(deviceName, osVersion)).c_str(),
+                          [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                          0,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    sqlite3_close(db);
+    return true;
+}
+
+
+bool Controller::removeDevice(std::string deviceName)
+{
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+    
+    result = sqlite3_exec(db,
+                          ("DELETE FROM device " + Device::getDeleteSQL(deviceName)).c_str(),
+                          [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                          0,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    sqlite3_close(db);
+    return true;
+}
+
+std::vector<Device> Controller::getAllDevices()
+{
+    std::vector<Device> registeredDevices;
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return registeredDevices;
+    }
+    
+    result = sqlite3_exec(db,
+                          "SELECT * FROM device;",
+                          [](void *ptr, int argc, char **argv, char **azColName)
+                          {
+                              std::vector<Device>* registeredDevices = (std::vector<Device>*)ptr;
+                              registeredDevices->push_back(Device(argc, argv));
+                              return 0;
+                          },
+                          &registeredDevices,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(registeredDevices)
+    
+    
+    return registeredDevices;
+}
+
 bool Controller::loadConfiguration()
 {
     sqlite3 *db;

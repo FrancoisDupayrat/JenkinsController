@@ -53,7 +53,7 @@ std::string App::getTableFormat()
 {
     return "("  \
     "ID          TEXT PRIMARY KEY  NOT NULL," \
-    "NAME        TEXT UNIQUE      NOT NULL," \
+    "NAME        TEXT UNIQUE       NOT NULL," \
     "VERSION     INT               NOT NULL);";
 }
 

@@ -162,7 +162,31 @@ int main(int argc, const char * argv[])
     }
     else if(command == "devices")
     {
-        std::cout << "Not implemented yet";
+        bool verbose = false;
+        if((argc >= 3 && std::string(argv[2]) == "-v") || (argc >= 4 && std::string(argv[3]) == "-v"))
+        {
+            verbose = true;
+        }
+        if((argc >= 3 && std::string(argv[2]) == "-all") || (argc >= 4 && std::string(argv[3]) == "-all"))
+        {
+            std::cout << "All option not implemented yet\n";
+        }
+        std::vector<jc::Device> devices = controller->getAllDevices();
+        if(devices.size() == 0)
+        {
+            std::cout << "No device registered\n";
+        }
+        for(jc::Device device : devices)
+        {
+            if(verbose)
+            {
+                std::cout << device.getName() << "  |  " << device.getModel() << "  |  " << device.getOsVersion() << "  |  " << device.getIdentifier() << "\n";
+            }
+            else
+            {
+                std::cout << device.getName() << "\n";
+            }
+        }
     }
     else if(command == "apps")
     {
@@ -177,7 +201,7 @@ int main(int argc, const char * argv[])
         }
         for(jc::App app : apps)
         {
-            std::cout << app.getName() << ", version " + std::to_string(app.getLastVersion()) + ", identifier: " + app.getIdentifier() << "\n";
+            std::cout << app.getName() << ", version " << std::to_string(app.getLastVersion()) << ", identifier: " << app.getIdentifier() << "\n";
         }
     }
     else if(command == "device")
@@ -228,6 +252,25 @@ int main(int argc, const char * argv[])
                     std::cout << "missing arguments for command register app, see jc help register\n";
                 }
             }
+            else if (commandDetail == "device")
+            {
+                if(argc >= 7)
+                {
+                    bool result;
+                    if(controller->addDevice(argv[3], argv[4], argv[5], argv[6]))
+                    {
+                        std::cout << "Registered device " << argv[3] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the device was not registered\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command register device, see jc help register\n";
+                }
+            }
         }
     }
     else if(command == "update")
@@ -264,6 +307,24 @@ int main(int argc, const char * argv[])
                     std::cout << "missing arguments for command update app, see jc help update\n";
                 }
             }
+            else if(commandDetail == "device")
+            {
+                if(argc >= 5)
+                {
+                    if(controller->updateDevice(argv[3], argv[4]))
+                    {
+                        std::cout << "Updated device " << argv[3] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the device was not updated\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command update device, see jc help update\n";
+                }
+            }
         }
     }
     else if(command == "remove")
@@ -291,6 +352,24 @@ int main(int argc, const char * argv[])
                 else
                 {
                     std::cout << "missing arguments for command remove app, see jc help remove\n";
+                }
+            }
+            else if(commandDetail == "device")
+            {
+                if(argc >= 4)
+                {
+                    if(controller->removeDevice(argv[3]))
+                    {
+                        std::cout << "Removed device " << argv[3] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the device was not removed\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command remove device, see jc help remove\n";
                 }
             }
         }

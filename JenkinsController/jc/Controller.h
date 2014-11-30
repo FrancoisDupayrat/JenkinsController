@@ -23,10 +23,16 @@ class Controller
 {
 public:
     Controller();
+    
     bool addApp(std::string appName, std::string appIdentifier, int version = 1);
     bool updateApp(std::string appName, int version);
     bool removeApp(std::string appName);
     std::vector<App> getAllApps();
+    
+    bool addDevice(std::string deviceName, std::string deviceIdentifier, std::string model, std::string osVersion);
+    bool updateDevice(std::string deviceName, std::string osVersion);
+    bool removeDevice(std::string deviceName);
+    std::vector<Device> getAllDevices();
 private:
     bool loadConfiguration();
     Configuration* conf;
