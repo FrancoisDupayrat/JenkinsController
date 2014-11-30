@@ -1,1 +1,14 @@
 .DS_Store
+
+# Personal files in the iOS project #
+######################-
+*.mode1v3
+*.mode2v3
+
+xcuserdata
+
+*.mode*
+*.pbxuser
+*.perspective*
+
+!project.pbxproj

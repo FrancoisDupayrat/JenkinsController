@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include "Controller.h"
 
 #define VERSION 0.1
 
@@ -14,10 +15,12 @@ int main(int argc, const char * argv[])
 {
     if(argc <= 1)
     {
-        std::cout << "Jenkins Controller v" << VERSION << "\nUse jc help to see all available commands\n";
+        std::cout << "Jenkins Controller v" << VERSION << "\nUse jc help to see all available commands\nWarning, current version doesn't protect from SQL injection.";
+#warning TODO: use prepared statements to protect from SQL injection
         return 0;
     }
     std::string command = argv[1];
+    jc::Controller* controller = new jc::Controller();
     if(command == "help")
     {
         if(argc == 2 || (argc == 3 && std::string(argv[2]) == "help"))
