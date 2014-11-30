@@ -220,7 +220,7 @@ int main(int argc, const char * argv[])
                     }
                     else
                     {
-                        std::cout << "Error, the app was not registered";
+                        std::cout << "Error, the app was not registered\n";
                     }
                 }
                 else
@@ -230,9 +230,41 @@ int main(int argc, const char * argv[])
             }
         }
     }
-    else if(command == "udpate")
+    else if(command == "update")
     {
-        std::cout << "Not implemented yet";
+        if(argc < 3)
+        {
+            std::cout << "missing arguments for command update, see jc help update\n";
+        }
+        else
+        {
+            std::string commandDetail = argv[2];
+            if(commandDetail == "app")
+            {
+                if(argc >= 5)
+                {
+                    if(atoi(argv[4]) > 0)
+                    {
+                        if(controller->updateApp(argv[3], atoi(argv[4])))
+                        {
+                            std::cout << "Updated app " << argv[3] << "\n";
+                        }
+                        else
+                        {
+                            std::cout << "Error, the app was not updated\n";
+                        }
+                    }
+                    else
+                    {
+                        std::cout << "The app version is not valid, must be > 0\n";
+                    }
+                }
+                else
+                {
+                    std::cout << "missing arguments for command update app, see jc help update\n";
+                }
+            }
+        }
     }
     else if(command == "remove")
     {

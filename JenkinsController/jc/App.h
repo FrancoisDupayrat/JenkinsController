@@ -27,6 +27,7 @@ public:
     int getLastVersion();
     
     static std::string getTableFormat();
+    static std::string getUpdateVersionSQL(std::string name, int version);
     std::string getInsertSQL(std::string tableName);
 private:
     App() { }

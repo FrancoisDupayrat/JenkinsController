@@ -57,6 +57,11 @@ std::string App::getTableFormat()
     "VERSION     INT               NOT NULL);";
 }
 
+std::string App::getUpdateVersionSQL(std::string name, int version)
+{
+    return "SET VERSION=" + std::to_string(version) + " WHERE NAME='" + name + "';";
+}
+
 std::string App::getInsertSQL(std::string tableName)
 {
     return "INSERT INTO " + tableName + " (ID, NAME, VERSION) VALUES ('" + identifier + "', '" + name + "', " + std::to_string(lastVersion) + ");";
