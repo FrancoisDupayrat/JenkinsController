@@ -18,6 +18,7 @@ class App
 {
 public:
     App(std::string name, std::string identifier, int version = 1);
+    App(int argc, char** argv);
     ~App();
     void update(int newVersion);
     

@@ -166,7 +166,19 @@ int main(int argc, const char * argv[])
     }
     else if(command == "apps")
     {
-        std::cout << "Not implemented yet";
+        if(argc >= 3 && std::string(argv[2]) == "-v")
+        {
+            std::cout << "Verbose option not implemented yet\n";
+        }
+        std::vector<jc::App> apps = controller->getAllApps();
+        if(apps.size() == 0)
+        {
+            std::cout << "No app registered\n";
+        }
+        for(jc::App app : apps)
+        {
+            std::cout << app.getName() << ", version " + std::to_string(app.getLastVersion()) + ", identifier: " + app.getIdentifier() << "\n";
+        }
     }
     else if(command == "device")
     {
@@ -193,13 +205,22 @@ int main(int argc, const char * argv[])
             {
                 if(argc >= 5)
                 {
+                    bool result;
                     if(argc >= 6 && atoi(argv[5]) > 0)
                     {
-                        controller->addApp(argv[3], argv[4], atoi(argv[5]));
+                        result = controller->addApp(argv[3], argv[4], atoi(argv[5]));
                     }
                     else
                     {
-                        controller->addApp(argv[3], argv[4]);
+                        result = controller->addApp(argv[3], argv[4]);
+                    }
+                    if(result)
+                    {
+                        std::cout << "Registered app " << argv[3] << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, the app was not registered";
                     }
                 }
                 else

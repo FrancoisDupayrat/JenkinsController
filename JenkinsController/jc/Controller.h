@@ -10,6 +10,7 @@
 #define __JenkinsController__Controller__
 
 #include <iostream>
+#include <vector>
 #include "jcMacros.h"
 #include "Configuration.h"
 #include "App.h"
@@ -23,6 +24,7 @@ class Controller
 public:
     Controller();
     bool addApp(std::string appName, std::string appIdentifier, int version = 1);
+    std::vector<App> getAllApps();
 private:
     bool loadConfiguration();
     Configuration* conf;

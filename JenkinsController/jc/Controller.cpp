@@ -22,11 +22,11 @@ Controller::Controller()
 }
 
 //Helper define to avoid repeating the error checking
-#define RETURN_ON_SQL_ERROR if( result != SQLITE_OK ) { \
+#define RETURN_ON_SQL_ERROR(RETURN_VALUE) if( result != SQLITE_OK ) { \
 fprintf(stderr, "SQL error: %s\n", errorMessage);\
 sqlite3_free(errorMessage);\
 sqlite3_close(db);\
-return false; }
+return RETURN_VALUE; }
 
 
 bool Controller::addApp(std::string appName, std::string appIdentifier, int version)
@@ -50,7 +50,7 @@ bool Controller::addApp(std::string appName, std::string appIdentifier, int vers
                           },
                           &tableExists,
                           &errorMessage);
-    RETURN_ON_SQL_ERROR
+    RETURN_ON_SQL_ERROR(false)
     if(!tableExists)
     {
         result = sqlite3_exec(db,
@@ -58,8 +58,7 @@ bool Controller::addApp(std::string appName, std::string appIdentifier, int vers
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
-        RETURN_ON_SQL_ERROR
-        std::cout << "Table created";
+        RETURN_ON_SQL_ERROR(false)
     }
     
     App app(appName, appIdentifier, version);
@@ -69,11 +68,38 @@ bool Controller::addApp(std::string appName, std::string appIdentifier, int vers
                           [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                           0,
                           &errorMessage);
-    RETURN_ON_SQL_ERROR
+    RETURN_ON_SQL_ERROR(false)
     
     sqlite3_close(db);
-    std::cout << "Added app " << app.getName() << "\n";
     return true;
+}
+
+std::vector<App> Controller::getAllApps()
+{
+    std::vector<App> registeredApps;
+    sqlite3 *db;
+    char *errorMessage = 0;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return registeredApps;
+    }
+    
+    result = sqlite3_exec(db,
+                          "SELECT * FROM app;",
+                          [](void *ptr, int argc, char **argv, char **azColName)
+                          {
+                              std::vector<App>* registeredApps = (std::vector<App>*)ptr;
+                              registeredApps->push_back(App(argc, argv));
+                              return 0;
+                          },
+                          &registeredApps,
+                          &errorMessage);
+    RETURN_ON_SQL_ERROR(registeredApps)
+    
+    
+    return registeredApps;
 }
 
 bool Controller::loadConfiguration()
@@ -104,7 +130,7 @@ bool Controller::loadConfiguration()
                           },
                           &tableExists,
                           &errorMessage);
-    RETURN_ON_SQL_ERROR
+    RETURN_ON_SQL_ERROR(false)
     
     if(!tableExists)
     {
@@ -113,14 +139,14 @@ bool Controller::loadConfiguration()
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
-        RETURN_ON_SQL_ERROR
+        RETURN_ON_SQL_ERROR(false)
         
         result = sqlite3_exec(db,
                               conf->getInsertSQL("configuration").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
-        RETURN_ON_SQL_ERROR
+        RETURN_ON_SQL_ERROR(false)
         std::cout << "Wrote default configuration into DB\n";
     }
     else
@@ -134,7 +160,7 @@ bool Controller::loadConfiguration()
                               },
                               conf,
                               &errorMessage);
-        RETURN_ON_SQL_ERROR
+        RETURN_ON_SQL_ERROR(false)
     }
     sqlite3_close(db);
     return true;

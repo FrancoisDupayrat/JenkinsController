@@ -17,6 +17,13 @@ App::App(std::string name, std::string identifier, int version)
     lastVersion = version;
 }
 
+App::App(int argc, char** argv)
+{
+    identifier = std::string(argv[0]);
+    name = std::string(argv[1]);
+    lastVersion = atoi(argv[2]);
+}
+
 App::~App()
 {
     
