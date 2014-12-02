@@ -42,6 +42,7 @@ public:
     std::vector<Install> getAllDeviceInstall(std::string deviceName);
 private:
     bool loadConfiguration();
+    sqlite3* openDB();
     bool checkAppTableExist(sqlite3 *db);
     bool checkDeviceTableExist(sqlite3 *db);
     bool checkInstallTableExist(sqlite3 *db);
