@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include "Controller.h"
+#include "WebServer.h"
 
 #define VERSION 0.1
 
@@ -45,6 +46,7 @@ int main(int argc, const char * argv[])
             std::cout << "  register\tregister a new app or device\n";
             std::cout << "  update\tupdate an app, device or install\n";
             std::cout << "  remove\tremove an app, device or install\n";
+            std::cout << "  startserver\tstart a JC server\n";
         }
         else
         {
@@ -141,6 +143,12 @@ int main(int argc, const char * argv[])
                 std::cout << "Usage: jc remove install [app] [device]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [device] is the  device name\n";
+            }
+            else if(commandDetail == "startserver")
+            {
+                std::cout << "Start a JC server. This instance of JC will be stuck being a server\n";
+                std::cout << "Usage: jc startserver [port]\n";
+                std::cout << "  [port] (optional) port to start the server on. Default port is 8888\n";
             }
             else
             {
@@ -321,7 +329,6 @@ int main(int argc, const char * argv[])
             {
                 if(argc >= 7)
                 {
-                    bool result;
                     if(controller->addDevice(argv[3], argv[4], argv[5], argv[6]))
                     {
                         std::cout << "Registered device " << argv[3] << "\n";
@@ -522,6 +529,25 @@ int main(int argc, const char * argv[])
                 std::cout << "unknown command remove " + commandDetail + ", use jc help remove to see all options\n";
                 returnCode = 1;
             }
+        }
+    }
+    else if(command == "startserver")
+    {
+        int port = 8888;
+        if(argc >= 3)
+        {
+            port = atoi(argv[2]);
+        }
+        if(WebServer::startServer(port))
+        {
+            std::cout << "Server started on port " << port << ", press enter to stop it.";
+            std::cin.get();
+            WebServer::stopServer();
+        }
+        else
+        {
+            std::cout << "Error starting server";
+            returnCode = 1;
         }
     }
     else
