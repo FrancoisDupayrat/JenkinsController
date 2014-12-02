@@ -19,6 +19,9 @@
 
 NS_JC
 
+/* The controller is in charge of interacting with the DB.
+   Each method will open and then close a DB connection.
+ */
 class Controller
 {
 public:
@@ -42,6 +45,7 @@ public:
     std::vector<Install> getAllDeviceInstall(std::string deviceName);
 private:
     bool loadConfiguration();
+    //Open DB connection. Return nullptr if it was not successful. Caller is responsible for calling sqlite3_close.
     sqlite3* openDB();
     bool checkAppTableExist(sqlite3 *db);
     bool checkDeviceTableExist(sqlite3 *db);

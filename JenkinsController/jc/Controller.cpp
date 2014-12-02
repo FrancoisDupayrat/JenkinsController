@@ -106,7 +106,7 @@ std::vector<App> Controller::getAllApps()
                               &errorMessage);
     RETURN_ON_SQL_ERROR(registeredApps)
     
-    
+    sqlite3_close(db);
     return registeredApps;
 }
 
@@ -130,7 +130,7 @@ App Controller::getApp(std::string name)
                               &errorMessage);
     RETURN_ON_SQL_ERROR(App())
     
-    
+    sqlite3_close(db);
     return matchingApp.size() > 0 ? matchingApp[0] : App();
 }
 
@@ -211,7 +211,7 @@ std::vector<Device> Controller::getAllDevices()
                               &errorMessage);
     RETURN_ON_SQL_ERROR(registeredDevices)
     
-    
+    sqlite3_close(db);
     return registeredDevices;
 }
 
@@ -235,7 +235,7 @@ Device Controller::getDevice(std::string name)
                               &errorMessage);
     RETURN_ON_SQL_ERROR(Device())
     
-    
+    sqlite3_close(db);
     return matchingDevice.size() > 0 ? matchingDevice[0] : Device();
 }
 
@@ -326,6 +326,7 @@ std::vector<Install> Controller::getAllAppInstall(std::string appName)
                               &errorMessage);
     RETURN_ON_SQL_ERROR(installs)
     
+    sqlite3_close(db);
     return installs;
 }
 
@@ -349,6 +350,7 @@ std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
                               &errorMessage);
     RETURN_ON_SQL_ERROR(installs)
     
+    sqlite3_close(db);
     return installs;
 }
 
@@ -359,6 +361,7 @@ sqlite3* Controller::openDB()
     if(result)
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
         return nullptr;
     }
     return db;
@@ -419,6 +422,7 @@ bool Controller::loadConfiguration()
                               &errorMessage);
         RETURN_ON_SQL_ERROR(false)
     }
+    
     sqlite3_close(db);
     return true;
 }
