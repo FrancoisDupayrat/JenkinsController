@@ -107,25 +107,25 @@ int main(int argc, const char * argv[])
             else if(commandDetail == "register")
             {
                 std::cout << "Register an app or a device\n";
-                std::cout << "Usage jc register device [device-name] [device-id] [model] [OS Version]\n";
+                std::cout << "Usage: jc register device [device-name] [device-id] [model] [OS Version]\n";
                 std::cout << "  [device-name] is the easily identifiable device name\n";
                 std::cout << "  [device-id] is the unique device ID\n";
                 std::cout << "  [model] is the device model (string)\n";
                 std::cout << "  [OS Version] is the device OS Version (string)\n";
-                std::cout << "Usage jc register app [app-name] [app-id]\n";
+                std::cout << "Usage: jc register app [app-name] [app-id]\n";
                 std::cout << "  [app-name] is the short app name, must match Jenkins config\n";
                 std::cout << "  [app-id] is the unique app ID\n";
             }
             else if(commandDetail == "udpate")
             {
                 std::cout << "Update an app, device or install informations\n";
-                std::cout << "Usage jc update device [device] [OS Version]\n";
+                std::cout << "Usage: jc update device [device] [OS Version]\n";
                 std::cout << "  [device] is the  device name\n";
                 std::cout << "  [OS Version] is the new device OS version (string)\n";
-                std::cout << "Usage jc update app [app] [version]\n";
+                std::cout << "Usage: jc update app [app] [version]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [version] is the new app version. Must be an integer\n";
-                std::cout << "Usage jc update install [app] [device] [version]\n";
+                std::cout << "Usage: jc update install [app] [device] [version]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [device] is the  device name\n";
                 std::cout << "  [version] (optional) is the installed app version. Must be an integer\n";
@@ -133,11 +133,11 @@ int main(int argc, const char * argv[])
             else if(commandDetail == "remove")
             {
                 std::cout << "Remove an app, device or install informations\n";
-                std::cout << "Usage jc remove device [device]\n";
+                std::cout << "Usage: jc remove device [device]\n";
                 std::cout << "  [device] is the  device name\n";
-                std::cout << "Usage jc remove app [app]\n";
+                std::cout << "Usage: jc remove app [app]\n";
                 std::cout << "  [app] is the app name\n";
-                std::cout << "Usage jc remove install [app] [device]\n";
+                std::cout << "Usage: jc remove install [app] [device]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [device] is the  device name\n";
             }
