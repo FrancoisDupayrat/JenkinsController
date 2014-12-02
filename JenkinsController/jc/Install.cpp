@@ -20,9 +20,12 @@ Install::Install(App app, Device device, int appVersion)
 
 Install::Install(int argc, char** argv)
 {
-    Controller delegate;
-    app = delegate.getApp(argv[0]);
-    device = delegate.getDevice(argv[1]);
+    Controller* delegate = Controller::createController();
+    if(delegate != nullptr)
+    {
+        app = delegate->getApp(argv[0]);
+        device = delegate->getDevice(argv[1]);
+    }
     appVersion = atoi(argv[2]);
 }
 

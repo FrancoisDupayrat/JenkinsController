@@ -25,7 +25,8 @@ NS_JC
 class Controller
 {
 public:
-    Controller();
+    //Create the Controller. Caller is responsible for deleting the Controller. Returns nullptr if it was not successful.
+    static Controller* createController();
     
     bool addApp(std::string appName, std::string appIdentifier, int version = 1);
     bool updateApp(std::string appName, int version);
@@ -44,6 +45,7 @@ public:
     std::vector<Install> getAllAppInstall(std::string appName);
     std::vector<Install> getAllDeviceInstall(std::string deviceName);
 private:
+    Controller();
     bool loadConfiguration();
     //Open DB connection. Return nullptr if it was not successful. Caller is responsible for calling sqlite3_close.
     sqlite3* openDB();

@@ -11,14 +11,15 @@
 USING_NS_JC;
 using namespace std;
 
-
-Controller::Controller()
+Controller* Controller::createController()
 {
-    conf = nullptr;
-    if(!loadConfiguration())
+    Controller* controller = new Controller();
+    if(!controller->loadConfiguration())
     {
-        throw;
+        delete(controller);
+        return nullptr;
     }
+    return controller;
 }
 
 //Helper define to avoid repeating the error checking
@@ -319,6 +320,7 @@ std::vector<Install> Controller::getAllAppInstall(std::string appName)
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<Install>* installs = (std::vector<Install>*)ptr;
+                                  //Assume all installs from DB are valid
                                   installs->push_back(Install(argc, argv));
                                   return 0;
                               },
@@ -343,6 +345,7 @@ std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<Install>* installs = (std::vector<Install>*)ptr;
+                                  //Assume all installs from DB are valid
                                   installs->push_back(Install(argc, argv));
                                   return 0;
                               },
@@ -354,17 +357,9 @@ std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
     return installs;
 }
 
-sqlite3* Controller::openDB()
+Controller::Controller()
 {
-    sqlite3 *db;
-    int result = sqlite3_open("jc.db", &db);
-    if(result)
-    {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return nullptr;
-    }
-    return db;
+    conf = nullptr;
 }
 
 bool Controller::loadConfiguration()
@@ -425,6 +420,19 @@ bool Controller::loadConfiguration()
     
     sqlite3_close(db);
     return true;
+}
+
+sqlite3* Controller::openDB()
+{
+    sqlite3 *db;
+    int result = sqlite3_open("jc.db", &db);
+    if(result)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return nullptr;
+    }
+    return db;
 }
 
 bool Controller::checkAppTableExist(sqlite3 *db)

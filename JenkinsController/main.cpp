@@ -139,14 +139,11 @@ int main(int argc, const char * argv[])
         }
         return 0;
     }
-    jc::Controller* controller = NULL;
-    try
+    jc::Controller* controller = jc::Controller::createController();
+    if(controller == nullptr)
     {
-        controller = new jc::Controller();
-    }
-    catch (...)
-    {
-        std::cout << "Error initializing DB, aborting\n";
+        std::cout << "Error initializing jc DB Controller, aborting\n";
+        return 1;
     }
     if(command == "build")
     {
