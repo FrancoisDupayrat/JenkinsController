@@ -277,12 +277,21 @@ bool Controller::updateInstall(std::string appName, std::string deviceName, int 
     else
     {
         Install install(app, getDevice(deviceName), version);
-        result = sqlite3_exec(db,
-                              install.getInsertSQL("install").c_str(),
-                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
-                              0,
-                              &errorMessage);
-        RETURN_ON_SQL_ERROR(false)
+        if(install.getApp().getName().length() > 0 && install.getDevice().getName().length() > 0)
+        {
+            result = sqlite3_exec(db,
+                                  install.getInsertSQL("install").c_str(),
+                                  [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                                  0,
+                                  &errorMessage);
+            RETURN_ON_SQL_ERROR(false)
+        }
+        else
+        {
+            fprintf(stderr, "Invalid app or device for this install");
+            sqlite3_close(db);
+            return false;
+        }
     }
     
     sqlite3_close(db);
