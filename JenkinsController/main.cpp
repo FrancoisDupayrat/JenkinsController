@@ -11,6 +11,12 @@
 
 #define VERSION 0.1
 
+/* Return code :
+ -1 not implemented
+ 0 successful
+ 1 invalid
+ 2 DB error
+ */
 int main(int argc, const char * argv[])
 {
     if(argc <= 1)
@@ -135,7 +141,11 @@ int main(int argc, const char * argv[])
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  [device] is the  device name\n";
             }
-            std::cout << "Command unknown";
+            else
+            {
+                std::cout << "Command unknown";
+                return 1;
+            }
         }
         return 0;
     }
@@ -145,17 +155,22 @@ int main(int argc, const char * argv[])
         std::cout << "Error initializing jc DB Controller, aborting\n";
         return 1;
     }
+    //The code to return. See the details on main() documentation
+    int returnCode = 0;
     if(command == "build")
     {
         std::cout << "Not implemented yet";
+        returnCode = -1;
     }
     else if(command == "install")
     {
         std::cout << "Not implemented yet";
+        returnCode = -1;
     }
     else if(command == "build-install")
     {
         std::cout << "Not implemented yet";
+        returnCode = -1;
     }
     else if(command == "devices")
     {
@@ -195,6 +210,7 @@ int main(int argc, const char * argv[])
         else
         {
             std::cout << "Only -all option is implemented for now, connected devices is not available\n";
+            returnCode = -1;
         }
     }
     else if(command == "apps")
@@ -202,6 +218,7 @@ int main(int argc, const char * argv[])
         if(argc >= 3 && std::string(argv[2]) == "-v")
         {
             std::cout << "Verbose option not implemented yet\n";
+            returnCode = -1;
         }
         std::vector<jc::App> apps = controller->getAllApps();
         if(apps.size() == 0)
@@ -235,6 +252,7 @@ int main(int argc, const char * argv[])
         else
         {
             std::cout << "Please specify a device\n";
+            returnCode = 1;
         }
     }
     else if(command == "app")
@@ -259,17 +277,20 @@ int main(int argc, const char * argv[])
         else
         {
             std::cout << "Please specify an app\n";
+            returnCode = 1;
         }
     }
     else if(command == "configure")
     {
         std::cout << "Not implemented yet";
+        returnCode = -1;
     }
     else if(command == "register")
     {
         if(argc < 3)
         {
             std::cout << "missing arguments for command register, see jc help register\n";
+            returnCode = 1;
         }
         else
         {
@@ -294,11 +315,13 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the app was not registered\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command register app, see jc help register\n";
+                    returnCode = 1;
                 }
             }
             else if (commandDetail == "device")
@@ -313,16 +336,19 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the device was not registered\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command register device, see jc help register\n";
+                    returnCode = 1;
                 }
             }
             else
             {
                 std::cout << "unknown command register " + commandDetail + ", use jc help register to see all options\n";
+                returnCode = 1;
             }
         }
     }
@@ -331,6 +357,7 @@ int main(int argc, const char * argv[])
         if(argc < 3)
         {
             std::cout << "missing arguments for command update, see jc help update\n";
+            returnCode = 1;
         }
         else
         {
@@ -348,16 +375,19 @@ int main(int argc, const char * argv[])
                         else
                         {
                             std::cout << "Error, the app was not updated\n";
+                            returnCode = 2;
                         }
                     }
                     else
                     {
                         std::cout << "The app version is not valid, must be > 0\n";
+                        returnCode = 1;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command update app, see jc help update\n";
+                    returnCode = 1;
                 }
             }
             else if(commandDetail == "device")
@@ -371,11 +401,13 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the device was not updated\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command update device, see jc help update\n";
+                    returnCode = 1;
                 }
             }
             else if(commandDetail == "install")
@@ -392,6 +424,7 @@ int main(int argc, const char * argv[])
                         else
                         {
                             std::cout << "The version must be > 0";
+                            returnCode = 1;
                         }
                     }
                     else
@@ -405,16 +438,19 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the install was not updated\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command update install, see jc help update\n";
+                    returnCode = 1;
                 }
             }
             else
             {
                 std::cout << "unknown command update " + commandDetail + ", use jc help update to see all options\n";
+                returnCode = 1;
             }
         }
     }
@@ -423,6 +459,7 @@ int main(int argc, const char * argv[])
         if(argc < 3)
         {
             std::cout << "missing arguments for command update, see jc help update\n";
+            returnCode = 1;
         }
         else
         {
@@ -438,11 +475,13 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the app was not removed\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command remove app, see jc help remove\n";
+                    returnCode = 1;
                 }
             }
             else if(commandDetail == "device")
@@ -456,11 +495,13 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the device was not removed\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command remove device, see jc help remove\n";
+                    returnCode = 1;
                 }
             }
             else if(commandDetail == "install")
@@ -474,24 +515,28 @@ int main(int argc, const char * argv[])
                     else
                     {
                         std::cout << "Error, the install was not removed\n";
+                        returnCode = 2;
                     }
                 }
                 else
                 {
                     std::cout << "missing arguments for command remove install, see jc help remove\n";
+                    returnCode = 1;
                 }
             }
             else
             {
                 std::cout << "unknown command remove " + commandDetail + ", use jc help remove to see all options\n";
+                returnCode = 1;
             }
         }
     }
     else
     {
         std::cout << "jc: '" << command << "' is not a jc command. See 'jc help'.\n";
+        returnCode = 1;
     }
     delete(controller);
-    return 0;
+    return returnCode;
 }
 
