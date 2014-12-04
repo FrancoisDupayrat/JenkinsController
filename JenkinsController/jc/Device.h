@@ -28,12 +28,7 @@ public:
     std::string getModel();
     std::string getOsVersion();
     
-    static std::string getTableFormat();
-    std::string getInsertSQL(std::string tableName);
-    static std::string getUpdateVersionSQL(std::string name, std::string osVersion);
-    static std::string getWhereSQL(std::string name);
 private:
-    
     std::string name;
     std::string identifier;
     std::string model;

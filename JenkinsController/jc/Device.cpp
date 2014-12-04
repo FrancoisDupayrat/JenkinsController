@@ -55,27 +55,3 @@ std::string Device::getOsVersion()
 {
     return osVersion;
 }
-
-std::string Device::getTableFormat()
-{
-    return "("  \
-    "ID          TEXT PRIMARY KEY  NOT NULL," \
-    "NAME        TEXT UNIQUE       NOT NULL," \
-    "MODEL       TEXT              NOT NULL," \
-    "VERSION     TEXT              NOT NULL);";
-}
-
-std::string Device::getInsertSQL(std::string tableName)
-{
-    return "INSERT INTO " + tableName + " (ID, NAME, MODEL, VERSION) VALUES ('" + identifier + "', '" + name + "', '" + model + "', '" + osVersion + "');";
-}
-
-std::string Device::getUpdateVersionSQL(std::string name, std::string osVersion)
-{
-    return "SET VERSION=" + osVersion + " WHERE NAME='" + name + "';";
-}
-
-std::string Device::getWhereSQL(std::string name)
-{
-    return "WHERE NAME='" + name + "'";
-}

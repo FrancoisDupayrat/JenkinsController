@@ -27,12 +27,7 @@ public:
     std::string getIdentifier();
     int getLastVersion();
     
-    static std::string getTableFormat();
-    std::string getInsertSQL(std::string tableName);
-    static std::string getUpdateVersionSQL(std::string name, int version);
-    static std::string getWhereSQL(std::string name);
 private:
-    
     std::string name;
     std::string identifier;
     int lastVersion;

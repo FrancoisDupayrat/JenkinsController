@@ -48,26 +48,3 @@ int App::getLastVersion()
 {
     return lastVersion;
 }
-
-std::string App::getTableFormat()
-{
-    return "("  \
-    "ID          TEXT PRIMARY KEY  NOT NULL," \
-    "NAME        TEXT UNIQUE       NOT NULL," \
-    "VERSION     INT               NOT NULL);";
-}
-
-std::string App::getInsertSQL(std::string tableName)
-{
-    return "INSERT INTO " + tableName + " (ID, NAME, VERSION) VALUES ('" + identifier + "', '" + name + "', " + std::to_string(lastVersion) + ");";
-}
-
-std::string App::getUpdateVersionSQL(std::string name, int version)
-{
-    return "SET VERSION=" + std::to_string(version) + " WHERE NAME='" + name + "';";
-}
-
-std::string App::getWhereSQL(std::string name)
-{
-    return "WHERE NAME='" + name + "'";
-}

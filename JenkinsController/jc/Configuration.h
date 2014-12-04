@@ -25,13 +25,9 @@ public:
     bool isLocal();
     void setLocal();
     void setRemote(std::string url);
+    std::string getRemote();
     
-    static std::string getTableFormat();
-    std::string getInsertSQL(std::string tableName);
-    //return true if the configuration version changed
-    bool loadFromSQL(int argc, char** argv);
 private:
-    
     bool local;
     std::string remoteUrl;
     unsigned long id_;

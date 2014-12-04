@@ -37,10 +37,8 @@ bool Controller::addApp(std::string appName, std::string appIdentifier, int vers
     if(!checkAppTableExist(db)) return false;
     char *errorMessage = 0;
     
-    App app(appName, appIdentifier, version);
-    
     int result = sqlite3_exec(db,
-                              app.getInsertSQL("app").c_str(),
+                              ("INSERT INTO app (ID, NAME, VERSION) VALUES ('" + appIdentifier + "', '" + appName + "', " + std::to_string(version) + ");").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -58,7 +56,7 @@ bool Controller::updateApp(std::string appName, int version)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("UPDATE app " + App::getUpdateVersionSQL(appName, version)).c_str(),
+                              ("UPDATE app SET VERSION=" + std::to_string(version) + " WHERE NAME='" + appName + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -77,7 +75,7 @@ bool Controller::removeApp(std::string appName)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("DELETE FROM app " + App::getWhereSQL(appName) + ";").c_str(),
+                              ("DELETE FROM app WHERE NAME='" + appName + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -100,7 +98,9 @@ std::vector<App> Controller::getAllApps()
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<App>* registeredApps = (std::vector<App>*)ptr;
-                                  registeredApps->push_back(App(argc, argv));
+                                  registeredApps->push_back(App(std::string(argv[1]), //Name
+                                                                std::string(argv[0]), //Id
+                                                                atoi(argv[2]))); //Version
                                   return 0;
                               },
                               &registeredApps,
@@ -120,11 +120,13 @@ App Controller::getApp(std::string name)
     
     std::vector<App> matchingApp;
     int result = sqlite3_exec(db,
-                              ("SELECT * FROM app " + App::getWhereSQL(name) + ";").c_str(),
+                              ("SELECT * FROM app WHERE NAME='" + name + "';").c_str(),
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<App>* matchingApp = (std::vector<App>*)ptr;
-                                  matchingApp->push_back(App(argc, argv));
+                                  matchingApp->push_back(App(std::string(argv[1]), //Name
+                                                             std::string(argv[0]), //Id
+                                                             atoi(argv[2]))); //Version
                                   return 0;
                               },
                               &matchingApp,
@@ -142,10 +144,8 @@ bool Controller::addDevice(std::string deviceName, std::string deviceIdentifier,
     if(!checkDeviceTableExist(db)) return false;
     char *errorMessage = 0;
     
-    Device device(deviceName, deviceIdentifier, model, osVersion);
-    
     int result = sqlite3_exec(db,
-                              device.getInsertSQL("device").c_str(),
+                              ("INSERT INTO device (ID, NAME, MODEL, VERSION) VALUES ('" + deviceIdentifier + "', '" + deviceName + "', '" + model + "', '" + osVersion + "');").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -163,7 +163,7 @@ bool Controller::updateDevice(std::string deviceName, std::string osVersion)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("UPDATE device " + Device::getUpdateVersionSQL(deviceName, osVersion)).c_str(),
+                              ("UPDATE device SET VERSION=" + osVersion + " WHERE NAME='" + deviceName + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -182,7 +182,7 @@ bool Controller::removeDevice(std::string deviceName)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("DELETE FROM device " + Device::getWhereSQL(deviceName) + ";").c_str(),
+                              ("DELETE FROM device WHERE NAME='" + deviceName + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -205,7 +205,10 @@ std::vector<Device> Controller::getAllDevices()
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<Device>* registeredDevices = (std::vector<Device>*)ptr;
-                                  registeredDevices->push_back(Device(argc, argv));
+                                  registeredDevices->push_back(Device(std::string(argv[1]), //Name
+                                                                      std::string(argv[0]), //Identifier
+                                                                      std::string(argv[2]), //Model
+                                                                      std::string(argv[3]))); //OSVersion
                                   return 0;
                               },
                               &registeredDevices,
@@ -225,11 +228,14 @@ Device Controller::getDevice(std::string name)
     
     std::vector<Device> matchingDevice;
     int result = sqlite3_exec(db,
-                              ("SELECT * FROM device " + Device::getWhereSQL(name) + ";").c_str(),
+                              ("SELECT * FROM device WHERE NAME='" + name + "';").c_str(),
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<Device>* matchingDevice = (std::vector<Device>*)ptr;
-                                  matchingDevice->push_back(Device(argc, argv));
+                                  matchingDevice->push_back(Device(std::string(argv[1]), //Name
+                                                                   std::string(argv[0]), //Identifier
+                                                                   std::string(argv[2]), //Model
+                                                                   std::string(argv[3]))); //OSVersion
                                   return 0;
                               },
                               &matchingDevice,
@@ -249,7 +255,7 @@ bool Controller::updateInstall(std::string appName, std::string deviceName, int 
     
     bool installExist = false;
     int result = sqlite3_exec(db,
-                              ("SELECT * FROM install " + Install::getWhereSQL(appName, deviceName) + ";").c_str(),
+                              ("SELECT * FROM install WHERE APP='" + appName + "' AND DEVICE='" + deviceName + "';").c_str(),
                               [](void *installExist, int argc, char **argv, char **azColName)
                               {
                                   *(bool*)installExist = true;
@@ -268,7 +274,7 @@ bool Controller::updateInstall(std::string appName, std::string deviceName, int 
     if(installExist)
     {
         result = sqlite3_exec(db,
-                              ("UPDATE install " + Install::getUpdateVersionSQL(appName, deviceName, version)).c_str(),
+                              ("UPDATE install SET VERSION=" + std::to_string(version) + " WHERE APP='" + appName + "' AND DEVICE='" + deviceName + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -280,7 +286,10 @@ bool Controller::updateInstall(std::string appName, std::string deviceName, int 
         if(install.getApp().getName().length() > 0 && install.getDevice().getName().length() > 0)
         {
             result = sqlite3_exec(db,
-                                  install.getInsertSQL("install").c_str(),
+                                  ("INSERT INTO install (APP, DEVICE, VERSION) VALUES ('"
+                                   + install.getApp().getName() + "', '"
+                                   + install.getDevice().getName() + "', "
+                                   + std::to_string(install.getAppVersion()) + ");").c_str(),
                                   [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                                   0,
                                   &errorMessage);
@@ -306,7 +315,7 @@ bool Controller::removeInstall(std::string appName, std::string deviceName)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("DELETE FROM install " + Install::getWhereSQL(appName, deviceName) + ";").c_str(),
+                              ("DELETE FROM install WHERE APP='" + appName + "' AND DEVICE='" + deviceName + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -325,7 +334,7 @@ std::vector<Install> Controller::getAllAppInstall(std::string appName)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("SELECT * FROM install " + Install::getAllAppWhereSQL(appName) + ";").c_str(),
+                              ("SELECT * FROM install WHERE APP='" + appName + "';").c_str(),
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<Install>* installs = (std::vector<Install>*)ptr;
@@ -350,7 +359,7 @@ std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
     char *errorMessage = 0;
     
     int result = sqlite3_exec(db,
-                              ("SELECT * FROM install " + Install::getAllDeviceWhereSQL(deviceName) + ";").c_str(),
+                              ("SELECT * FROM install WHERE DEVICE='" + deviceName + "';").c_str(),
                               [](void *ptr, int argc, char **argv, char **azColName)
                               {
                                   std::vector<Install>* installs = (std::vector<Install>*)ptr;
@@ -399,14 +408,18 @@ bool Controller::loadConfiguration()
     if(!tableExists)
     {
         result = sqlite3_exec(db,
-                              ("CREATE TABLE configuration" + Configuration::getTableFormat()).c_str(),
+                              "CREATE TABLE configuration("  \
+                              "ID INT PRIMARY KEY     NOT NULL," \
+                              "URL            TEXT    NOT NULL," \
+                              "LOCAL          INT     NOT NULL," \
+                              "VERSION        INT     NOT NULL);",
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
         RETURN_ON_SQL_ERROR(false)
         
         result = sqlite3_exec(db,
-                              conf->getInsertSQL("configuration").c_str(),
+                              ("INSERT INTO configuration (ID, URL, LOCAL, VERSION) VALUES (1, '" + conf->getRemote() + "', 1, " CONFIGURATION_VERSION ");").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -419,8 +432,19 @@ bool Controller::loadConfiguration()
                               "SELECT * from configuration",
                               [](void *conf, int argc, char **argv, char **azColName)
                               {
-                                  ((Configuration*)conf)->loadFromSQL(argc, argv);
-                                  return 0;
+                                  if(atoi(argv[2]))
+                                  {
+                                      ((Configuration*)conf)->setRemote(std::string(argv[1]));
+                                  }
+                                  else
+                                  {
+                                      ((Configuration*)conf)->setLocal();
+                                  }
+                                  if(strcmp(CONFIGURATION_VERSION, argv[3]) != 0)
+                                  {
+                                      fprintf(stderr, "Invalid configuration version, expected : %s, in database : %s", CONFIGURATION_VERSION, argv[3]);
+                                  }
+                                  return strcmp(CONFIGURATION_VERSION, argv[3]);
                               },
                               conf,
                               &errorMessage);
@@ -461,7 +485,10 @@ bool Controller::checkAppTableExist(sqlite3 *db)
     if(!tableExists)
     {
         result = sqlite3_exec(db,
-                              ("CREATE TABLE app" + App::getTableFormat()).c_str(),
+                              "CREATE TABLE app("  \
+                              "ID          TEXT PRIMARY KEY  NOT NULL," \
+                              "NAME        TEXT UNIQUE       NOT NULL," \
+                              "VERSION     INT               NOT NULL);",
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -487,7 +514,11 @@ bool Controller::checkDeviceTableExist(sqlite3 *db)
     if(!tableExists)
     {
         result = sqlite3_exec(db,
-                              ("CREATE TABLE install" + Device::getTableFormat()).c_str(),
+                              "CREATE TABLE install("  \
+                              "ID          TEXT PRIMARY KEY  NOT NULL," \
+                              "NAME        TEXT UNIQUE       NOT NULL," \
+                              "MODEL       TEXT              NOT NULL," \
+                              "VERSION     TEXT              NOT NULL);",
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -513,7 +544,11 @@ bool Controller::checkInstallTableExist(sqlite3 *db)
     if(!tableExists)
     {
         result = sqlite3_exec(db,
-                              ("CREATE TABLE install" + Install::getTableFormat()).c_str(),
+                              "CREATE TABLE install("  \
+                              "APP          TEXT    NOT NULL," \
+                              "DEVICE       TEXT    NOT NULL," \
+                              "VERSION      INT     NOT NULL," \
+                              "PRIMARY KEY(APP, DEVICE));",
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);

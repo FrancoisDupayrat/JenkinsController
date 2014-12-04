@@ -39,23 +39,7 @@ void Configuration::setRemote(std::string url)
     remoteUrl = url;
 }
 
-std::string Configuration::getTableFormat()
+std::string Configuration::getRemote()
 {
-    return "("  \
-    "ID INT PRIMARY KEY     NOT NULL," \
-    "URL            TEXT    NOT NULL," \
-    "LOCAL          INT     NOT NULL," \
-    "VERSION        INT     NOT NULL);";
-}
-
-std::string Configuration::getInsertSQL(std::string tableName)
-{
-    return "INSERT INTO " + tableName + " (ID, URL, LOCAL, VERSION) VALUES (1, '" + remoteUrl + "', 1, " CONFIGURATION_VERSION ");";
-}
-
-bool Configuration::loadFromSQL(int argc, char** argv)
-{
-    remoteUrl = std::string(argv[1]);
-    local = atoi(argv[2]);
-    return strcmp(CONFIGURATION_VERSION, argv[3]) != 0;
+    return remoteUrl;
 }

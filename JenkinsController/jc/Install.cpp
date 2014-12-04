@@ -53,37 +53,3 @@ int Install::getAppVersion()
 {
     return appVersion;
 }
-
-std::string Install::getTableFormat()
-{
-    return "("  \
-    "APP          TEXT    NOT NULL," \
-    "DEVICE       TEXT    NOT NULL," \
-    "VERSION      INT     NOT NULL," \
-    "PRIMARY KEY(APP, DEVICE));";
-}
-
-std::string Install::getInsertSQL(std::string tableName)
-{
-    return "INSERT INTO " + tableName + " (APP, DEVICE, VERSION) VALUES ('" + app.getName() + "', '" + device.getName() + "', " + std::to_string(appVersion) + ");";
-}
-
-std::string Install::getUpdateVersionSQL(std::string app, std::string device, int version)
-{
-    return "SET VERSION=" + std::to_string(version) + " WHERE APP='" + app + "' AND DEVICE='" + device + "';";
-}
-
-std::string Install::getWhereSQL(std::string app, std::string device)
-{
-    return "WHERE APP='" + app + "' AND DEVICE='" + device + "'";
-}
-
-std::string Install::getAllAppWhereSQL(std::string app)
-{
-    return "WHERE APP='" + app + "'";
-}
-
-std::string Install::getAllDeviceWhereSQL(std::string device)
-{
-    return "WHERE DEVICE='" + device + "'";
-}
