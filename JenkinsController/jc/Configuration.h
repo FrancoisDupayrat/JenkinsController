@@ -22,10 +22,10 @@ class Configuration
 public:
     Configuration();
     Configuration(Configuration const& copy);
-    bool isLocal();
+    bool isLocal() const;
     void setLocal();
     void setRemote(std::string url);
-    std::string getRemote();
+    std::string getRemote() const;
     
 private:
     bool local;

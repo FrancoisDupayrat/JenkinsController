@@ -23,9 +23,9 @@ public:
     ~App();
     void update(int newVersion);
     
-    std::string getName();
-    std::string getIdentifier();
-    int getLastVersion();
+    std::string getName() const;
+    std::string getIdentifier() const;
+    int getLastVersion() const;
     
 private:
     std::string name;

@@ -36,22 +36,22 @@ void Device::update(std::string newOsVersion)
     this->osVersion = osVersion;
 }
 
-std::string Device::getName()
+std::string Device::getName() const
 {
     return name;
 }
 
-std::string Device::getIdentifier()
+std::string Device::getIdentifier() const
 {
     return identifier;
 }
 
-std::string Device::getModel()
+std::string Device::getModel() const
 {
     return model;
 }
 
-std::string Device::getOsVersion()
+std::string Device::getOsVersion() const
 {
     return osVersion;
 }

@@ -25,9 +25,9 @@ public:
     ~Install();
     void update(int newAppVersion);
     
-    App& getApp();
-    Device& getDevice();
-    int getAppVersion();
+    const App& getApp() const;
+    const Device& getDevice() const;
+    int getAppVersion() const;
     
 private:
     App app;

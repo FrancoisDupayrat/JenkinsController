@@ -23,10 +23,10 @@ public:
     ~Device();
     void update(std::string newOsVersion);
     
-    std::string getName();
-    std::string getIdentifier();
-    std::string getModel();
-    std::string getOsVersion();
+    std::string getName() const;
+    std::string getIdentifier() const;
+    std::string getModel() const;
+    std::string getOsVersion() const;
     
 private:
     std::string name;

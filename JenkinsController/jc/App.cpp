@@ -34,17 +34,17 @@ void App::update(int newVersion)
     lastVersion = newVersion;
 }
 
-std::string App::getName()
+std::string App::getName() const
 {
     return name;
 }
 
-std::string App::getIdentifier()
+std::string App::getIdentifier() const
 {
     return identifier;
 }
 
-int App::getLastVersion()
+int App::getLastVersion() const
 {
     return lastVersion;
 }

@@ -39,17 +39,17 @@ void Install::update(int newAppVersion)
     this->appVersion = newAppVersion;
 }
 
-App& Install::getApp()
+const App& Install::getApp() const
 {
     return app;
 }
 
-Device& Install::getDevice()
+const Device& Install::getDevice() const
 {
     return device;
 }
 
-int Install::getAppVersion()
+int Install::getAppVersion() const
 {
     return appVersion;
 }

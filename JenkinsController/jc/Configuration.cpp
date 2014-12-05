@@ -23,7 +23,7 @@ Configuration::Configuration(Configuration const &copy)
     id_ = copy.id_;
 }
 
-bool Configuration::isLocal()
+bool Configuration::isLocal() const
 {
     return local;
 }
@@ -39,7 +39,7 @@ void Configuration::setRemote(std::string url)
     remoteUrl = url;
 }
 
-std::string Configuration::getRemote()
+std::string Configuration::getRemote() const
 {
     return remoteUrl;
 }
