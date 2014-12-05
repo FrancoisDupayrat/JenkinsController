@@ -4,6 +4,13 @@ JenkinsController, also called jc, is an utility to manage the testing of an app
 The main goal is to know which version of which app is on which device.
 It is designed to be integrated with a running Jenkins instance.
 
+Requirements
+=================
+* the command ```jc devices``` requires command-line tools: 
+	* ```system_profiler``` (pre-installed on Mac), 
+	* ```sed``` (pre-installed on Mac and Unix)
+	* ```adb``` part of Android tools
+
 Build
 =================
 JenkinsController focus on Mac platform for now. You can build it using Xcode.

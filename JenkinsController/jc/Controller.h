@@ -38,6 +38,7 @@ public:
     bool updateDevice(std::string deviceName, std::string osVersion);
     bool removeDevice(std::string deviceName);
     std::vector<Device> getAllDevices();
+    std::vector<Device> getConnectedDevices();
     Device getDevice(std::string name);
     
     bool updateInstall(std::string appName, std::string deviceName, int version = -1);

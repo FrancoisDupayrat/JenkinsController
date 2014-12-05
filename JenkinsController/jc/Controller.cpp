@@ -11,6 +11,23 @@
 USING_NS_JC;
 using namespace std;
 
+std::vector<std::string> exec(const char* cmd) {
+    FILE* pipe = popen(cmd, "r");
+    std::vector<std::string> result;
+    if (!pipe) return result;
+    char buffer[1024];
+    while(!feof(pipe)) {
+    	if(fgets(buffer, 1024, pipe) != NULL)
+        {
+            std::string line = std::string(buffer);
+            line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+    		result.push_back(line);
+        }
+    }
+    pclose(pipe);
+    return result;
+}
+
 Controller* Controller::createController()
 {
     Controller* controller = new Controller();
@@ -217,6 +234,67 @@ std::vector<Device> Controller::getAllDevices()
     
     sqlite3_close(db);
     return registeredDevices;
+}
+
+std::vector<Device> Controller::getConnectedDevices()
+{
+    std::vector<Device> connectedDevice;
+    //Get all devices IDs
+    //For iOS, read connected USB devices, and the UDID is under "Serial Number", like any sane person would think of
+    for(std::string iosUDID : exec("system_profiler SPUSBDataType | sed -n -E -e \'/(iPhone|iPad)/,/Serial/s/ *Serial Number: *(.+)/\\1/p\'"))
+    {
+        connectedDevice.push_back(Device("Unknown", iosUDID, "iOS device", "OS unknown"));
+    }
+    /*For Android, we can't read connected USB devices, because there is no way to differentiate an Android from other things (hub, mouse, keyboard ...). 
+     Instead, use ADB, which is slow as fuck. And of course, it doesn't return the Android ID, but a useless "Serial Number", which is NOT A FUCKING SERIAL NUMBER, because some manufacturer are too lazy to change it. 
+     So hope that you don't have 2 devices from a lazy manufacturer and use ADB SHELL to get the real Android ID with some mumbo jumbo, and hope Google doesn't decide to remove that access in the future...*/
+    for(std::string androidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\nadb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\\'android_id\\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//\ndone"))
+    {
+        //Last character is garbage, remove it
+        connectedDevice.push_back(Device("Unknown", androidID.substr(0, androidID.length() - 1), "Android device", "OS unknown"));;
+    }
+    
+    //Find all devices infos, if we have them
+    sqlite3 *db;
+    if((db = openDB()) == nullptr) return connectedDevice;
+    if(!checkDeviceTableExist(db)) return connectedDevice;
+    char *errorMessage = 0;
+    std::vector<Device> matchingDevices;
+    for(int i = 0; i < connectedDevice.size(); i++)
+    {
+        Device& d = connectedDevice.at(i);
+        sqlite3_exec(db,
+                     ("SELECT * FROM device WHERE ID='" + d.getIdentifier() + "';").c_str(),
+                     [](void *ptr, int argc, char **argv, char **azColName)
+                     {
+                         std::vector<Device>* matchingDevices = (std::vector<Device>*)ptr;
+                         matchingDevices->push_back(Device(std::string(argv[1]), //Name
+                                                          std::string(argv[0]), //Identifier
+                                                          std::string(argv[2]), //Model
+                                                          std::string(argv[3]))); //OSVersion
+                         return 0;
+                     },
+                     &matchingDevices,
+                     &errorMessage);
+    }
+    sqlite3_close(db);
+    
+    //Merge both arrays
+    for(Device d : matchingDevices)
+    {
+        connectedDevice.erase(std::remove_if(connectedDevice.begin(),
+                                             connectedDevice.end(),
+                                             [&] (const Device& unknownDevice)
+                                             {
+                                                 return unknownDevice.getIdentifier() == d.getIdentifier();
+                                             }));
+    }
+    for(Device d : connectedDevice)
+    {
+        matchingDevices.push_back(d);
+    }
+    
+    return matchingDevices;
 }
 
 Device Controller::getDevice(std::string name)

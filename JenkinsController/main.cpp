@@ -74,6 +74,7 @@ int main(int argc, const char * argv[])
             else if(commandDetail == "devices")
             {
                 std::cout << "List connected devices\n";
+                std::cout << "/!\\ When not using -all, this command requires adb, and is slow because of adb.\n";
                 std::cout << "Usage: jc devices -v -all\n";
                 std::cout << "  -v to have more details\n";
                 std::cout << "  -all to see all registered devices as well\n";
@@ -188,29 +189,21 @@ int main(int argc, const char * argv[])
                 all = true;
             }
         }
-        if(all)
+        std::vector<jc::Device> devices = all ? controller->getAllDevices() : controller->getConnectedDevices();
+        if(devices.size() == 0)
         {
-            std::vector<jc::Device> devices = controller->getAllDevices();
-            if(devices.size() == 0)
-            {
-                std::cout << "No device registered\n";
-            }
-            for(jc::Device device : devices)
-            {
-                if(verbose)
-                {
-                    std::cout << device.getName() << "  |  " << device.getModel() << "  |  " << device.getOsVersion() << "  |  " << device.getIdentifier() << "\n";
-                }
-                else
-                {
-                    std::cout << device.getName() << "\n";
-                }
-            }
+            std::cout << "No device " << (all ? "registered" : "connected") << "\n";
         }
-        else
+        for(jc::Device device : devices)
         {
-            std::cout << "Only -all option is implemented for now, connected devices is not available\n";
-            returnCode = -1;
+            if(verbose)
+            {
+                std::cout << device.getName() << "  |  " << device.getModel() << "  |  " << device.getOsVersion() << "  |  " << device.getIdentifier() << "\n";
+            }
+            else
+            {
+                std::cout << device.getName() << "\n";
+            }
         }
     }
     else if(command == "apps")
