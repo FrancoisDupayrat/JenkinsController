@@ -13,13 +13,14 @@ USING_NS_JC;
 Configuration::Configuration()
 {
     local = true;
-    remoteUrl = "localhost";
+    url = "";
+    id_ = 1;
 }
 
 Configuration::Configuration(Configuration const &copy)
 {
     local = copy.local;
-    remoteUrl = copy.remoteUrl;
+    url = copy.url;
     id_ = copy.id_;
 }
 
@@ -28,18 +29,29 @@ bool Configuration::isLocal() const
     return local;
 }
 
-void Configuration::setLocal()
+void Configuration::setLocal(std::string url)
 {
     local = true;
+    this->url = url;
 }
 
 void Configuration::setRemote(std::string url)
 {
     local = false;
-    remoteUrl = url;
+    this->url = url;
 }
 
-std::string Configuration::getRemote() const
+std::string Configuration::getURL() const
 {
-    return remoteUrl;
+    return url;
+}
+
+void Configuration::setID(unsigned long id_)
+{
+    this->id_ = id_;
+}
+
+unsigned long Configuration::getID() const
+{
+    return id_;
 }

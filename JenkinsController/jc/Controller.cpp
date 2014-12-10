@@ -453,6 +453,37 @@ std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
     return installs;
 }
 
+
+bool Controller::setConfig(bool local, std::string url)
+{
+    sqlite3 *db;
+    if((db = openDB()) == nullptr) return false;
+    char *errorMessage = 0;
+    
+    if(local)
+    {
+        conf->setLocal(url);
+    }
+    else
+    {
+        conf->setRemote(url);
+    }
+    int result = sqlite3_exec(db,
+                              ("UPDATE configuration SET LOCAL=" + std::string(conf->isLocal() ? "1" : "0") + ", URL='" + conf->getURL() + "' WHERE ID='" + std::to_string(conf->getID()) + "';").c_str(),
+                              [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                              0,
+                              &errorMessage);
+    RETURN_ON_SQL_ERROR(false)
+    
+    sqlite3_close(db);
+    return true;
+}
+
+Configuration Controller::getConfiguration()
+{
+    return *conf;
+}
+
 Controller::Controller()
 {
     conf = nullptr;
@@ -497,7 +528,7 @@ bool Controller::loadConfiguration()
         RETURN_ON_SQL_ERROR(false)
         
         result = sqlite3_exec(db,
-                              ("INSERT INTO configuration (ID, URL, LOCAL, VERSION) VALUES (1, '" + conf->getRemote() + "', 1, " CONFIGURATION_VERSION ");").c_str(),
+                              ("INSERT INTO configuration (ID, URL, LOCAL, VERSION) VALUES (" + std::to_string(conf->getID()) + ", '" + conf->getURL() + "', " + std::string(conf->isLocal() ? "1" : "0")  + ", " CONFIGURATION_VERSION ");").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -510,14 +541,16 @@ bool Controller::loadConfiguration()
                               "SELECT * from configuration",
                               [](void *conf, int argc, char **argv, char **azColName)
                               {
+                                  ((Configuration*)conf)->setID(atoi(argv[0]));
                                   if(atoi(argv[2]))
                                   {
-                                      ((Configuration*)conf)->setRemote(std::string(argv[1]));
+                                      ((Configuration*)conf)->setLocal(std::string(argv[1]));
                                   }
                                   else
                                   {
-                                      ((Configuration*)conf)->setLocal();
+                                      ((Configuration*)conf)->setRemote(std::string(argv[1]));
                                   }
+                                  
                                   if(strcmp(CONFIGURATION_VERSION, argv[3]) != 0)
                                   {
                                       fprintf(stderr, "Invalid configuration version, expected : %s, in database : %s", CONFIGURATION_VERSION, argv[3]);

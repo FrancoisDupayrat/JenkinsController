@@ -100,9 +100,12 @@ int main(int argc, const char * argv[])
             else if(commandDetail == "configure")
             {
                 std::cout << "Configure Jenkins location\n";
-                std::cout << "Usage: jc configure -v local remote [URL]\n";
+                std::cout << "Usage: jc configure -v\n";
                 std::cout << "  -v to see current configuration\n";
-                std::cout << "  local to set as a local Jenkins install\n";
+                std::cout << "Usage: jc configure local [PATH]\n";
+                std::cout << "  local to set as a local Jenkins install, by specifing the apps folder is at [PATH].\n";
+                std::cout << "  the apps must have format [app-name].(apk/ipa)\n";
+                std::cout << "Usage: jc configure remote [URL]\n";
                 std::cout << "  remote to set as a remote Jenkins install, by specifing [URL]\n";
             }
             else if(commandDetail == "register")
@@ -275,8 +278,42 @@ int main(int argc, const char * argv[])
     }
     else if(command == "configure")
     {
-        std::cout << "Not implemented yet";
-        returnCode = -1;
+        if(argc < 3)
+        {
+            std::cout << "missing arguments for command configure, see jc help configure\n";
+            returnCode = 1;
+        }
+        else
+        {
+            std::string commandDetail = argv[2];
+            if(commandDetail == "-v")
+            {
+                jc::Configuration conf = controller->getConfiguration();
+                std::cout << "Current configuration: "  << (conf.isLocal() ? "local, pointing to app folder: " : "remote, pointing to url: ") << conf.getURL() << "\n";
+            }
+            else if((commandDetail == "local" || commandDetail == "remote") && argc >= 4)
+            {
+                if(controller->setConfig(commandDetail == "local", argv[3]))
+                {
+                    jc::Configuration conf = controller->getConfiguration();
+                    std::cout << "Config updated: "  << (conf.isLocal() ? "local, pointing to app folder: " : "remote, pointing to url: ") << conf.getURL() << "\n";
+                }
+                else
+                {
+                    std::cout << "Error, the config was not updated\n";
+                }
+            }
+            else if(argc < 4)
+            {
+                std::cout << "missing arguments for command configure " + commandDetail + ", see jc help configure\n";
+                returnCode = 1;
+            }
+            else
+            {
+                std::cout << "unknown command configure " + commandDetail + ", use jc help configure to see all options\n";
+                returnCode = 1;
+            }
+        }
     }
     else if(command == "register")
     {

@@ -45,6 +45,9 @@ public:
     bool removeInstall(std::string appName, std::string deviceName);
     std::vector<Install> getAllAppInstall(std::string appName);
     std::vector<Install> getAllDeviceInstall(std::string deviceName);
+    
+    bool setConfig(bool local, std::string url);
+    Configuration getConfiguration();
 private:
     Controller();
     bool loadConfiguration();

@@ -23,3 +23,7 @@ Install
 Run
 =================
 Run ```jc [command]``` to execute a command. See ```jc help``` for all the available commands
+
+First, you should use jc configure to set the jc instance as either local or remote
+* local: you need to point to an apps folder, which will contain the [app-name].(apk/ipa) files: ```jc configure local [path-to-your-apps-folder]```
+* remote: [NOT IMPLEMENTED] you need to point to a remote jc server: ```jc configure remote [jc-server-url]```
