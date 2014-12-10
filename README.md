@@ -14,7 +14,17 @@ Requirements
 Build
 =================
 JenkinsController focus on Mac platform for now. You can build it using Xcode.
-It is tested on Mac OS X 10.8
+
+It requires gnustl and libgcrypt to compile because of libmicrohttpd library. libmicrohttpd universal binary is included
+On mac, use port to install them :
+```
+ sudo port install libmicrohttpd +universal
+ sudo port install gnutls +universal
+ sudo port install libgcrypt +universal
+ ```
+They will be installed on ```opt/local/lib```, which is already in the library search path
+
+It is tested on Mac OS X 10.8.
 
 Install
 =================
