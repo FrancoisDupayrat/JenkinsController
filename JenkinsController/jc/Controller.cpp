@@ -11,8 +11,8 @@
 USING_NS_JC;
 using namespace std;
 
-std::vector<std::string> exec(const char* cmd) {
-    FILE* pipe = popen(cmd, "r");
+std::vector<std::string> exec(std::string cmd) {
+    FILE* pipe = popen(cmd.c_str(), "r");
     std::vector<std::string> result;
     if (!pipe) return result;
     char buffer[1024];
