@@ -41,6 +41,7 @@ public:
     std::vector<Device> getConnectedDevices();
     Device getDevice(std::string name);
     
+    bool performInstall(App app, Device device);
     bool updateInstall(std::string appName, std::string deviceName, int version = -1);
     bool removeInstall(std::string appName, std::string deviceName);
     std::vector<Install> getAllAppInstall(std::string appName);

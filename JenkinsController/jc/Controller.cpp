@@ -7,6 +7,7 @@
 //
 
 #include "Controller.h"
+#include <sys/stat.h>
 
 USING_NS_JC;
 using namespace std;
@@ -322,6 +323,72 @@ Device Controller::getDevice(std::string name)
     
     sqlite3_close(db);
     return matchingDevice.size() > 0 ? matchingDevice[0] : Device();
+}
+
+bool Controller::performInstall(App app, Device device)
+{
+    bool isAndroid = device.getIdentifier().length() < 40;
+    std::string appPath = conf->getURL() + (conf->getURL()[conf->getURL().length() - 1] == '/' ? "" : "/") + app.getName() + (isAndroid ? ".apk" : ".ipa");
+    struct stat buffer;
+    if(stat (appPath.c_str(), &buffer) != 0)
+    {
+        fprintf(stderr, "Can't install %s, %s is not readable.\n", app.getName().c_str(), appPath.c_str());
+        return false;
+    }
+    bool deviceFound = false;
+    bool appInstalled = false;
+    std::string installError;
+    if(isAndroid)
+    {
+        for(std::string serialAndAndroidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\\'android_id\\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone"))
+        {
+            std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
+            std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
+            if(device.getIdentifier() == androidID)
+            {
+                deviceFound = true;
+                std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath);
+                std::string success = "Success";
+                std::string execResult = results.at(results.size() - 1);
+                if(execResult.compare(0, success.length(), success) == 0)
+                {
+                    appInstalled = true;
+                }
+                else
+                {
+                    installError = execResult;
+                }
+            }
+        }
+    }
+    else
+    {
+        std::vector<std::string> results = exec("ideviceinstaller -u " + device.getIdentifier() + " -i " + appPath + " 2>&1");
+        std::string noDeviceString = "No iOS device found, is it plugged in?";
+        if(results.size() >= 1 && results[0].compare(0, noDeviceString.length(), noDeviceString) == 0)
+        {
+            deviceFound = false;
+        }
+        else
+        {
+            deviceFound = true;
+            appInstalled = true;
+        }
+    }
+    if(!deviceFound)
+    {
+        fprintf(stderr, "Can't install %s, device %s was not found\n", app.getName().c_str(), device.getName().length() > 0 ? device.getName().c_str() : device.getIdentifier().c_str());
+    }
+    else if(!appInstalled)
+    {
+        fprintf(stderr, "Can't install %s, error during installation: %s\n", app.getName().c_str(),
+                installError.c_str());
+    }
+    else if(device.getName().length() > 0)
+    {
+        updateInstall(app.getName(), device.getName());
+    }
+    return deviceFound;
 }
 
 bool Controller::updateInstall(std::string appName, std::string deviceName, int version)

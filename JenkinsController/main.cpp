@@ -168,8 +168,54 @@ int main(int argc, const char * argv[])
     }
     else if(command == "install")
     {
-        std::cout << "Not implemented yet";
-        returnCode = -1;
+        if(argc < 4)
+        {
+            std::cout << "missing arguments for command install, see jc help install\n";
+            returnCode = 1;
+        }
+        else
+        {
+            std::string appName = argv[2];
+            std::string deviceName = argv[3];
+            jc::App app = controller->getApp(appName);
+            if(app.getName() != appName)
+            {
+                std::cout << "this app isn't registered, use jc apps to see available apps/n";
+                returnCode = 1;
+            }
+            else
+            {
+                std::vector<jc::Device> targetDevices;
+                if(deviceName == "-all")
+                {
+                    targetDevices = controller->getConnectedDevices();
+                }
+                else
+                {
+                    jc::Device device = controller->getDevice(deviceName);
+                    if(device.getName() != deviceName)
+                    {
+                        std::cout << "this device isn't registered, use jc devices to see available devices/n";
+                        returnCode = 1;
+                    }
+                    else
+                    {
+                        targetDevices.push_back(device);
+                    }
+                }
+                for(jc::Device device : targetDevices)
+                {
+                    if(controller->performInstall(app, device))
+                    {
+                        std::cout  << appName << " v" << std::to_string(app.getLastVersion()) << " is installed on " << (device.getName().length() > 0 ? device.getName() : device.getIdentifier()) << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, " << appName << " was not installed on " << (device.getName().length() > 0 ? device.getName() : device.getIdentifier()) << "\n";
+                    }
+                }
+            }
+        }
     }
     else if(command == "build-install")
     {
