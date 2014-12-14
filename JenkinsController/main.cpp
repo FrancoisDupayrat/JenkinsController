@@ -404,7 +404,6 @@ int main(int argc, const char * argv[])
             {
                 if(argc >= 7)
                 {
-                    bool result;
                     if(controller->addDevice(argv[3], argv[4], argv[5], argv[6]))
                     {
                         std::cout << "Registered device " << argv[3] << "\n";
