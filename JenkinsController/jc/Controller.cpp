@@ -8,6 +8,10 @@
 
 #include "Controller.h"
 #include <sys/stat.h>
+#include <curl/curl.h>
+
+static CURL* curlHandle = NULL;
+static int controllerCounts = 0;
 
 USING_NS_JC;
 using namespace std;
@@ -32,13 +36,42 @@ std::vector<std::string> exec(std::string cmd) {
 Controller* Controller::createController()
 {
     Controller* controller = new Controller();
+    if(curlHandle == NULL)
+    {
+        curlHandle = curl_easy_init();
+    }
     if(!controller->loadConfiguration())
     {
         delete(controller);
         return nullptr;
     }
+    controllerCounts++;
     return controller;
 }
+
+Controller::~Controller()
+{
+    controllerCounts--;
+    if(controllerCounts == 0)
+    {
+        curl_easy_cleanup(curlHandle);
+        curlHandle = NULL;
+    }
+}
+
+bool Controller::launchBuild(std::string appName)
+{
+    App app = getApp(appName);
+    if(app.getName() != appName)
+    {
+        fprintf(stderr, "The app %s is not registered in jc.\n", appName.c_str());
+        return false;
+    }
+    curl_easy_setopt(curlHandle, CURLOPT_URL, ("http://localhost:8080/job/" + appName + "/build").c_str());
+    curl_easy_perform(curlHandle);
+    return true;
+}
+
 
 //Helper define to avoid repeating the error checking
 #define RETURN_ON_SQL_ERROR(RETURN_VALUE) if( result != SQLITE_OK ) { \
@@ -46,7 +79,6 @@ fprintf(stderr, "SQL error: %s\n", errorMessage);\
 sqlite3_free(errorMessage);\
 sqlite3_close(db);\
 return RETURN_VALUE; }
-
 
 bool Controller::addApp(std::string appName, std::string appIdentifier, int version)
 {

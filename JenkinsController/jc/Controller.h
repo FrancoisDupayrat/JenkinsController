@@ -27,6 +27,9 @@ class Controller
 public:
     //Create the Controller. Caller is responsible for deleting the Controller. Returns nullptr if it was not successful.
     static Controller* createController();
+    ~Controller();
+    
+    bool launchBuild(std::string appName);
     
     bool addApp(std::string appName, std::string appIdentifier, int version = 1);
     bool updateApp(std::string appName, int version);

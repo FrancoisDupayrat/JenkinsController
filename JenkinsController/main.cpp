@@ -52,6 +52,7 @@ int main(int argc, const char * argv[])
             if(commandDetail == "build")
             {
                 std::cout << "Build an app\n";
+                std::cout << "/!\\ This command assumes Jenkins is on localhost\n";
                 std::cout << "Usage: jc build [app]\n";
                 std::cout << "  [app] is the app name\n";
             }
@@ -66,6 +67,7 @@ int main(int argc, const char * argv[])
             else if(commandDetail == "build-install")
             {
                 std::cout << "Build an app and install on a device\n";
+                std::cout << "/!\\ This command assumes Jenkins is on localhost\n";
                 std::cout << "Usage: jc build-install [app] -all OR [device]\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  -all to install on all connected devices, exclusive with [device]\n";
@@ -163,8 +165,23 @@ int main(int argc, const char * argv[])
     int returnCode = 0;
     if(command == "build")
     {
-        std::cout << "Not implemented yet";
-        returnCode = -1;
+        if(argc >= 3)
+        {
+            std::string appName = argv[2];
+            if(controller->launchBuild(appName))
+            {
+                std::cout << "Launched build for app " << appName << ".\n";
+            }
+            else
+            {
+                std::cout << "Error, build for " << appName << " was not launched.\n";
+            }
+        }
+        else
+        {
+            std::cout << "Please specify an app\n";
+            returnCode = 1;
+        }
     }
     else if(command == "install")
     {
