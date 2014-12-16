@@ -18,7 +18,10 @@ It is tested on Mac OS X 10.8
 
 Install
 =================
-[TODO]
+To install JenkinsController, copy the jc file in /usr/bin (or any other location defined in your PATH environment variable).
+The database will be saved in ~/Library/Application Support/jc
+If you can't run jc, check the permissions (usually, ```chmod 777 jc``` will fix the problem)
+After installing, don't forget to configure it using ```jc configure```.
 
 Run
 =================
