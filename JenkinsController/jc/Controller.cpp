@@ -692,7 +692,7 @@ bool Controller::checkDeviceTableExist(sqlite3 *db)
     if(!tableExists)
     {
         result = sqlite3_exec(db,
-                              "CREATE TABLE install("  \
+                              "CREATE TABLE device("  \
                               "ID          TEXT PRIMARY KEY  NOT NULL," \
                               "NAME        TEXT UNIQUE       NOT NULL," \
                               "MODEL       TEXT              NOT NULL," \
