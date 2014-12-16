@@ -636,7 +636,14 @@ bool Controller::loadConfiguration()
 sqlite3* Controller::openDB()
 {
     sqlite3 *db;
-    int result = sqlite3_open("jc.db", &db);
+    struct stat st = {0};
+    std::string jcFolderPath = std::string(getenv("HOME")) + "/Library/Application Support/jc";
+    if (stat(jcFolderPath.c_str(), &st) == -1)
+    {
+        std::cout << "Creating jc folder in " << getenv("HOME") << "/Application Support\n";
+        mkdir(jcFolderPath.c_str(), 0700);
+    }
+    int result = sqlite3_open((jcFolderPath+"/jc.db").c_str(), &db);
     if(result)
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
