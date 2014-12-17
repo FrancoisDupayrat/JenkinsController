@@ -35,3 +35,29 @@ Run ```jc [command]``` to execute a command. See ```jc help``` for all the avail
 First, you should use jc configure to set the jc instance as either local or remote
 * local: you need to point to an apps folder, which will contain the [app-name].(apk/ipa) files: ```jc configure local [path-to-your-apps-folder]```
 * remote: [NOT IMPLEMENTED] you need to point to a remote jc server: ```jc configure remote [jc-server-url]```
+
+
+Jenkins Configuration
+=================
+
+To register the new app build, your app job need to:
+* check that jc is on local
+* copy your .apk and .ipa to jc app path
+* update the app in jc
+
+Here is the script to do all that, using $BUILD\_NUMBER to tag the version, and assuming you set $APP\_NAME:
+ ```
+ #Check jc conf is on local
+JC_CONF=$(jc configure -v | sed '1 s/Configuration: //' | sed '2d')
+echo $JC_CONF
+if [ $JC_CONF != local ]; then
+echo "Please configure JC as local"
+exit 1
+fi
+
+#Copy apps for jc and update the app version on jc
+JC_APP_PATH=$(jc configure -v | sed '2 s/App folder: //' | sed '1d')
+cp -f /path/to/your.apk "$JC_APP_PATH/$APP_NAME.apk"
+cp -f /path/to/your.ipa "$JC_APP_PATH/$APP_NAME.ipa"
+jc update app $APP_NAME $BUILD_NUMBER 
+```
