@@ -719,7 +719,7 @@ bool Controller::checkDeviceTableExist(sqlite3 *db)
     char *errorMessage = 0;
     bool tableExists = false;
     int result = sqlite3_exec(db,
-                              "SELECT name FROM sqlite_master WHERE type='table' AND name='install';",
+                              "SELECT name FROM sqlite_master WHERE type='table' AND name='device';",
                               [](void *tableExists, int argc, char **argv, char **azColName)
                               {
                                   *(bool*)tableExists = true;
