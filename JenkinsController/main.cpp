@@ -122,7 +122,7 @@ int main(int argc, const char * argv[])
                 std::cout << "  [app-name] is the short app name, must match Jenkins config\n";
                 std::cout << "  [app-id] is the unique app ID\n";
             }
-            else if(commandDetail == "udpate")
+            else if(commandDetail == "update")
             {
                 std::cout << "Update an app, device or install informations\n";
                 std::cout << "Usage: jc update device [device] [OS Version]\n";
@@ -149,7 +149,7 @@ int main(int argc, const char * argv[])
             }
             else
             {
-                std::cout << "Command unknown";
+                std::cout << "Command unknown\n";
                 return 1;
             }
         }
