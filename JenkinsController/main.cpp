@@ -352,14 +352,14 @@ int main(int argc, const char * argv[])
             if(commandDetail == "-v")
             {
                 jc::Configuration conf = controller->getConfiguration();
-                std::cout << "Current configuration: "  << (conf.isLocal() ? "local, pointing to app folder: " : "remote, pointing to url: ") << conf.getURL() << "\n";
+                std::cout << "Configuration: "  << (conf.isLocal() ? "local\nApp folder: " : "remote\nURL: ") << conf.getURL() << "\n";
             }
             else if((commandDetail == "local" || commandDetail == "remote") && argc >= 4)
             {
                 if(controller->setConfig(commandDetail == "local", argv[3]))
                 {
                     jc::Configuration conf = controller->getConfiguration();
-                    std::cout << "Config updated: "  << (conf.isLocal() ? "local, pointing to app folder: " : "remote, pointing to url: ") << conf.getURL() << "\n";
+                    std::cout << "Configuration updated\nConfiguration: "  << (conf.isLocal() ? "local\nApp folder: " : "remote\nURL: ") << conf.getURL() << "\n";
                 }
                 else
                 {
