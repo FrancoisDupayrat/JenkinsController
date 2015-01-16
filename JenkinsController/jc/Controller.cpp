@@ -281,7 +281,7 @@ std::vector<Device> Controller::getConnectedDevices()
     /*For Android, we can't read connected USB devices, because there is no way to differentiate an Android from other things (hub, mouse, keyboard ...). 
      Instead, use ADB, which is slow as fuck. And of course, it doesn't return the Android ID, but a useless "Serial Number", which is NOT A FUCKING SERIAL NUMBER, because some manufacturer are too lazy to change it. 
      So hope that you don't have 2 devices from a lazy manufacturer and use ADB SHELL to get the real Android ID with some mumbo jumbo, and hope Google doesn't decide to remove that access in the future...*/
-    for(std::string androidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\nadb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\\'android_id\\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//\ndone"))
+    for(std::string androidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\nadb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//\ndone"))
     {
         //Last character is garbage, remove it
         connectedDevice.push_back(Device("Unknown", androidID.substr(0, androidID.length() - 1), "Android device", "OS unknown"));;
@@ -372,7 +372,7 @@ bool Controller::performInstall(App app, Device device)
     std::string installError;
     if(isAndroid)
     {
-        for(std::string serialAndAndroidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\\'android_id\\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone"))
+        for(std::string serialAndAndroidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone"))
         {
             std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
             std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
