@@ -25,6 +25,12 @@ NS_JC
 class Controller
 {
 public:
+    typedef enum
+    {
+        NoOption = 0,
+        Force = 1,
+        Reinstall = 2,
+    } InstallOption;
     //Create the Controller. Caller is responsible for deleting the Controller. Returns nullptr if it was not successful.
     static Controller* createController();
     ~Controller();
@@ -44,7 +50,7 @@ public:
     std::vector<Device> getConnectedDevices();
     Device getDevice(std::string name);
     
-    bool performInstall(App app, Device device);
+    bool performInstall(App app, Device device, InstallOption = NoOption);
     bool performUninstall(App app, Device device);
     bool updateInstall(std::string appName, std::string deviceName, int version = -1);
     bool removeInstall(std::string appName, std::string deviceName);

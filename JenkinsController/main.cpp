@@ -60,10 +60,12 @@ int main(int argc, const char * argv[])
             else if(commandDetail == "install")
             {
                 std::cout << "Install an app on a device\n";
-                std::cout << "Usage: jc install [app] -all OR [device]\n";
+                std::cout << "Usage: jc install [app] -all OR [device] -r OR -f\n";
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  -all to install on all connected devices, exclusive with [device]\n";
                 std::cout << "  [device] is the device name to install on, exclusive with -all\n";
+                std::cout << "  -r to reinstall the app (will loose user data), exclusive with -f\n";
+                std::cout << "  -f to resintall the app if it can't be updated, exclusive with -r\n";
             }
             else if(commandDetail == "uninstall")
             {
@@ -203,6 +205,19 @@ int main(int argc, const char * argv[])
         {
             std::string appName = argv[2];
             std::string deviceName = argv[3];
+            jc::Controller::InstallOption option = jc::Controller::InstallOption::NoOption;
+            if(argc >= 5)
+            {
+                std::string optionString = argv[4];
+                if(optionString == "-r" || optionString == "-f")
+                {
+                    option = optionString == "-r" ? jc::Controller::InstallOption::Reinstall : jc::Controller::InstallOption::Force;
+                }
+                else
+                {
+                    std::cout << "Unrecognized option " << optionString << ", ignoring it\n";
+                }
+            }
             jc::App app = controller->getApp(appName);
             if(app.getName() != appName)
             {
@@ -231,7 +246,7 @@ int main(int argc, const char * argv[])
                 }
                 for(jc::Device device : targetDevices)
                 {
-                    if(controller->performInstall(app, device))
+                    if(controller->performInstall(app, device, option))
                     {
                         std::cout  << appName << " v" << std::to_string(app.getLastVersion()) << " is installed on " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
                     }

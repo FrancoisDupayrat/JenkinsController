@@ -357,7 +357,7 @@ Device Controller::getDevice(std::string name)
     return matchingDevice.size() > 0 ? matchingDevice[0] : Device();
 }
 
-bool Controller::performInstall(App app, Device device)
+bool Controller::performInstall(App app, Device device, InstallOption option)
 {
     bool isAndroid = device.getIdentifier().length() < 40;
     std::string appPath = conf->getURL() + (conf->getURL()[conf->getURL().length() - 1] == '/' ? "" : "/") + app.getName() + (isAndroid ? ".apk" : ".ipa");
@@ -379,6 +379,25 @@ bool Controller::performInstall(App app, Device device)
             if(device.getIdentifier() == androidID)
             {
                 deviceFound = true;
+                if(option == Reinstall)
+                { //Uninstall app first. Don't use the method as it would re-run the serial detection, which is very time consuming
+                    std::vector<std::string> appInstalledResult = exec("adb shell pm list packages | grep " + app.getIdentifier());
+                    bool appInstalled = appInstalledResult.size() > 0;
+                    if(appInstalled)
+                    {
+                        std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
+                        std::string success = "Success";
+                        std::string execResult = results.at(results.size() - 1);
+                        if(execResult.compare(0, success.length(), success) != 0)
+                        {
+                            installError = execResult + "\n";
+                        }
+                        else
+                        {
+                            std::cout << "App uninstalled, reinstalling...\n";
+                        }
+                    }
+                }
                 std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath);
                 std::string success = "Success";
                 std::string execResult = results.at(results.size() - 1);
@@ -388,7 +407,66 @@ bool Controller::performInstall(App app, Device device)
                 }
                 else
                 {
-                    installError = execResult;
+                    if(execResult.find("[INSTALL_FAILED_VERSION_DOWNGRADE]") != std::string::npos
+                           || execResult.find("[INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]") != std::string::npos)
+                    {
+                        bool shouldReinstall = option == Force;
+                        if(!shouldReinstall)
+                        {
+                            std::string userInput;
+                            do
+                            {
+                                if (userInput != "") std::cout << "Invalid input. ";
+                                std::cout << "Cannot do an update, reason: " << execResult << "\nDo you want to reinstall the app? [y/n]\n";
+                                std::cin >> userInput;
+                                std::transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
+                            }while (userInput != "yes"
+                                    && userInput != "no"
+                                    && userInput != "y"
+                                    && userInput != "n");
+                            if(userInput == "yes" || userInput == "y")
+                            {
+                                shouldReinstall = true;
+                            }
+                            else
+                            {
+                                installError = "App cannot be updated, you refused the resintall.";
+                            }
+                        }
+                        else
+                        {
+                            std::cout << "Can't update app, starting reinstall...\n";
+                        }
+                        if(shouldReinstall)
+                        {
+                            std::vector<std::string> uninstallResults = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
+                            std::string success = "Success";
+                            std::string execResult = uninstallResults.at(uninstallResults.size() - 1);
+                            if(execResult.compare(0, success.length(), success) != 0)
+                            {
+                                installError = execResult + "\n";
+                            }
+                            else
+                            {
+                                std::cout << "App uninstalled, reinstalling...\n";
+                            }
+                            
+                            std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath);
+                            execResult = results.at(results.size() - 1);
+                            if(execResult.compare(0, success.length(), success) == 0)
+                            {
+                                appInstalled = true;
+                            }
+                            else
+                            {
+                                installError += execResult;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        installError += execResult;
+                    }
                 }
             }
         }
