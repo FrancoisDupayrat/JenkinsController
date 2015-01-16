@@ -423,6 +423,75 @@ bool Controller::performInstall(App app, Device device)
     return deviceFound;
 }
 
+bool Controller::performUninstall(App app, Device device)
+{
+    bool isAndroid = device.getIdentifier().length() < 40;
+    bool deviceFound = false;
+    bool appUninstalled = false;
+    std::string uninstallError;
+    if(isAndroid)
+    {
+        for(std::string serialAndAndroidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone"))
+        {
+            std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
+            std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
+            if(device.getIdentifier() == androidID)
+            {
+                deviceFound = true;
+                std::vector<std::string> appInstalledResult = exec("adb shell pm list packages | grep " + app.getIdentifier());
+                bool appInstalled = appInstalledResult.size() > 0;
+                if(appInstalled)
+                {
+                    std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
+                    std::string success = "Success";
+                    std::string execResult = results.at(results.size() - 1);
+                    if(execResult.compare(0, success.length(), success) == 0)
+                    {
+                        appUninstalled = true;
+                    }
+                    else
+                    {
+                        uninstallError = execResult;
+                    }
+                }
+                else
+                {
+                    std::cout <<  app.getName() << " was already not installed on " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
+                    appUninstalled = true;
+                }
+            }
+        }
+    }
+    else
+    {
+        std::vector<std::string> results = exec("ideviceinstaller -u " + device.getIdentifier() + " -U " + app.getIdentifier() + " 2>&1");
+        std::string noDeviceString = "No iOS device found, is it plugged in?";
+        if(results.size() >= 1 && results[0].compare(0, noDeviceString.length(), noDeviceString) == 0)
+        {
+            deviceFound = false;
+        }
+        else
+        {
+            deviceFound = true;
+            appUninstalled = true;
+        }
+    }
+    if(!deviceFound)
+    {
+        fprintf(stderr, "Can't uninstall %s, device %s was not found\n", app.getName().c_str(), device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName().c_str() : device.getIdentifier().c_str());
+    }
+    else if(!appUninstalled)
+    {
+        fprintf(stderr, "Can't uninstall %s, error during installation: %s\n", app.getName().c_str(),
+                uninstallError.c_str());
+    }
+    else if(device.getName().length() > 0 && device.getName() != "Unknown")
+    {
+        removeInstall(app.getName(), device.getName());
+    }
+    return deviceFound;
+}
+
 bool Controller::updateInstall(std::string appName, std::string deviceName, int version)
 {
     sqlite3 *db;

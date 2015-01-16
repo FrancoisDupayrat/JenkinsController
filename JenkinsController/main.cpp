@@ -34,6 +34,7 @@ int main(int argc, const char * argv[])
             std::cout << "  help [command]\t\tshow more help on the command\n";
             std::cout << "  build [app]\t\t\tbuild the app\n";
             std::cout << "  install [app] [device]\tinstall app on specfic device\n";
+            std::cout << "  uninstall [app] [device]\tuninstall app on specfic device\n";
             std::cout << "  build-install [app] [device]\tbuild the app then install on specfic device\n";
             std::cout << "  devices\t\t\tlist connected devices\n";
             std::cout << "  apps\t\t\t\tlist known apps\n";
@@ -63,6 +64,14 @@ int main(int argc, const char * argv[])
                 std::cout << "  [app] is the app name\n";
                 std::cout << "  -all to install on all connected devices, exclusive with [device]\n";
                 std::cout << "  [device] is the device name to install on, exclusive with -all\n";
+            }
+            else if(commandDetail == "uninstall")
+            {
+                std::cout << "Uninstall an app on a device\n";
+                std::cout << "Usage: jc uninstall [app] -all OR [device]\n";
+                std::cout << "  [app] is the app name\n";
+                std::cout << "  -all to uninstall on all connected devices, exclusive with [device]\n";
+                std::cout << "  [device] is the device name to uninstall on, exclusive with -all\n";
             }
             else if(commandDetail == "build-install")
             {
@@ -225,6 +234,57 @@ int main(int argc, const char * argv[])
                     if(controller->performInstall(app, device))
                     {
                         std::cout  << appName << " v" << std::to_string(app.getLastVersion()) << " is installed on " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Error, " << appName << " was not installed on " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
+                    }
+                }
+            }
+        }
+    }
+    else if(command == "uninstall")
+    {
+        if(argc < 4)
+        {
+            std::cout << "missing arguments for command uninstall, see jc help uninstall\n";
+            returnCode = 1;
+        }
+        else
+        {
+            std::string appName = argv[2];
+            std::string deviceName = argv[3];
+            jc::App app = controller->getApp(appName);
+            if(app.getName() != appName)
+            {
+                std::cout << "this app isn't registered, use jc apps to see available apps\n";
+                returnCode = 1;
+            }
+            else
+            {
+                std::vector<jc::Device> targetDevices;
+                if(deviceName == "-all")
+                {
+                    targetDevices = controller->getConnectedDevices();
+                }
+                else
+                {
+                    jc::Device device = controller->getDevice(deviceName);
+                    if(device.getName() != deviceName)
+                    {
+                        std::cout << "this device isn't registered, use jc devices to see available devices\n";
+                        returnCode = 1;
+                    }
+                    else
+                    {
+                        targetDevices.push_back(device);
+                    }
+                }
+                for(jc::Device device : targetDevices)
+                {
+                    if(controller->performUninstall(app, device))
+                    {
+                        std::cout  << appName << " is uninstalled from " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
                     }
                     else
                     {
