@@ -409,14 +409,14 @@ bool Controller::performInstall(App app, Device device)
     }
     if(!deviceFound)
     {
-        fprintf(stderr, "Can't install %s, device %s was not found\n", app.getName().c_str(), device.getName().length() > 0 ? device.getName().c_str() : device.getIdentifier().c_str());
+        fprintf(stderr, "Can't install %s, device %s was not found\n", app.getName().c_str(), device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName().c_str() : device.getIdentifier().c_str());
     }
     else if(!appInstalled)
     {
         fprintf(stderr, "Can't install %s, error during installation: %s\n", app.getName().c_str(),
                 installError.c_str());
     }
-    else if(device.getName().length() > 0)
+    else if(device.getName().length() > 0 && device.getName() != "Unknown")
     {
         updateInstall(app.getName(), device.getName());
     }

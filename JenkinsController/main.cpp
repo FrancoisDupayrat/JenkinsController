@@ -197,7 +197,7 @@ int main(int argc, const char * argv[])
             jc::App app = controller->getApp(appName);
             if(app.getName() != appName)
             {
-                std::cout << "this app isn't registered, use jc apps to see available apps/n";
+                std::cout << "this app isn't registered, use jc apps to see available apps\n";
                 returnCode = 1;
             }
             else
@@ -212,7 +212,7 @@ int main(int argc, const char * argv[])
                     jc::Device device = controller->getDevice(deviceName);
                     if(device.getName() != deviceName)
                     {
-                        std::cout << "this device isn't registered, use jc devices to see available devices/n";
+                        std::cout << "this device isn't registered, use jc devices to see available devices\n";
                         returnCode = 1;
                     }
                     else
@@ -224,11 +224,11 @@ int main(int argc, const char * argv[])
                 {
                     if(controller->performInstall(app, device))
                     {
-                        std::cout  << appName << " v" << std::to_string(app.getLastVersion()) << " is installed on " << (device.getName().length() > 0 ? device.getName() : device.getIdentifier()) << "\n";
+                        std::cout  << appName << " v" << std::to_string(app.getLastVersion()) << " is installed on " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
                     }
                     else
                     {
-                        std::cout << "Error, " << appName << " was not installed on " << (device.getName().length() > 0 ? device.getName() : device.getIdentifier()) << "\n";
+                        std::cout << "Error, " << appName << " was not uninstalled from " << (device.getName().length() > 0 && device.getName() != "Unknown" ? device.getName() : device.getIdentifier()) << "\n";
                     }
                 }
             }
