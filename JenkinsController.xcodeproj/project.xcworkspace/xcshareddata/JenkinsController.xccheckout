@@ -10,29 +10,29 @@
 	<string>JenkinsController</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>FF0AC7FE-7DD7-4128-A2F5-672673CCEFF8</key>
+		<key>F4F7B44FF6EA5FD624CA32D0FC449DE1060EA53B</key>
 		<string>https://github.com/FrancoisDupayrat/JenkinsController.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>JenkinsController.xcodeproj/project.xcworkspace</string>
+	<string>JenkinsController.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>FF0AC7FE-7DD7-4128-A2F5-672673CCEFF8</key>
+		<key>F4F7B44FF6EA5FD624CA32D0FC449DE1060EA53B</key>
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/FrancoisDupayrat/JenkinsController.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>FF0AC7FE-7DD7-4128-A2F5-672673CCEFF8</string>
+	<string>F4F7B44FF6EA5FD624CA32D0FC449DE1060EA53B</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>FF0AC7FE-7DD7-4128-A2F5-672673CCEFF8</string>
+			<string>F4F7B44FF6EA5FD624CA32D0FC449DE1060EA53B</string>
 			<key>IDESourceControlWCCName</key>
 			<string>JenkinsController</string>
 		</dict>
