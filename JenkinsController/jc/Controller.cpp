@@ -475,9 +475,14 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
     {
         std::vector<std::string> results = exec("ideviceinstaller -u " + device.getIdentifier() + " -i " + appPath + " 2>&1");
         std::string noDeviceString = "No iOS device found, is it plugged in?";
+        std::string appVerifFailed = "Install - Error occured: ApplicationVerificationFailed";
         if(results.size() >= 1 && results[0].compare(0, noDeviceString.length(), noDeviceString) == 0)
         {
             deviceFound = false;
+        }
+        else if(results.size() >= 1 && results[results.size() - 1] == appVerifFailed)
+        {
+            deviceFound = true;
         }
         else
         {
