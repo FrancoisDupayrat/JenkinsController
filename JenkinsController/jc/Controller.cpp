@@ -498,7 +498,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
     {
         updateInstall(app.getName(), device.getName());
     }
-    return deviceFound;
+    return appInstalled;
 }
 
 bool Controller::performUninstall(App app, Device device)
@@ -567,7 +567,7 @@ bool Controller::performUninstall(App app, Device device)
     {
         removeInstall(app.getName(), device.getName());
     }
-    return deviceFound;
+    return appUninstalled;
 }
 
 bool Controller::updateInstall(std::string appName, std::string deviceName, int version)
