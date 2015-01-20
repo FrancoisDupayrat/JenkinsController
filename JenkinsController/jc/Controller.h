@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include "jcMacros.h"
 #include "Configuration.h"
 #include "App.h"
@@ -67,6 +68,10 @@ private:
     bool checkAppTableExist(sqlite3 *db);
     bool checkDeviceTableExist(sqlite3 *db);
     bool checkInstallTableExist(sqlite3 *db);
+    
+    //Return a std:map where keys are serial ID, and corresponding values are Android ID
+    std::map<std::string, std::string> getConnectedAndroidInfos();
+    
     Configuration* conf;
 };
 

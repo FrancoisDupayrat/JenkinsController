@@ -278,13 +278,11 @@ std::vector<Device> Controller::getConnectedDevices()
     {
         connectedDevice.push_back(Device("Unknown", iosUDID, "iOS device", "OS unknown"));
     }
-    /*For Android, we can't read connected USB devices, because there is no way to differentiate an Android from other things (hub, mouse, keyboard ...). 
-     Instead, use ADB, which is slow as fuck. And of course, it doesn't return the Android ID, but a useless "Serial Number", which is NOT A FUCKING SERIAL NUMBER, because some manufacturer are too lazy to change it. 
-     So hope that you don't have 2 devices from a lazy manufacturer and use ADB SHELL to get the real Android ID with some mumbo jumbo, and hope Google doesn't decide to remove that access in the future...*/
-    for(std::string androidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\nadb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//\ndone"))
+    std::map<std::string, std::string> infos = getConnectedAndroidInfos();
+    for(auto& info : infos)
     {
-        //Last character is garbage, remove it
-        connectedDevice.push_back(Device("Unknown", androidID.substr(0, androidID.length() - 1), "Android device", "OS unknown"));;
+        std::string androidID = info.second;
+        connectedDevice.push_back(Device("Unknown", androidID, "Android device", "OS unknown"));;
     }
     
     //Find all devices infos, if we have them
@@ -372,10 +370,11 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
     std::string installError;
     if(isAndroid)
     {
-        for(std::string serialAndAndroidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone"))
+        std::map<std::string, std::string> infos = getConnectedAndroidInfos();
+        for(auto& info : infos)
         {
-            std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
-            std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
+            std::string serial = info.first;
+            std::string androidID = info.second;
             if(device.getIdentifier() == androidID)
             {
                 deviceFound = true;
@@ -514,10 +513,11 @@ bool Controller::performUninstall(App app, Device device)
     std::string uninstallError;
     if(isAndroid)
     {
-        for(std::string serialAndAndroidID : exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone"))
+        std::map<std::string, std::string> infos = getConnectedAndroidInfos();
+        for(auto& info : infos)
         {
-            std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
-            std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
+            std::string serial = info.first;
+            std::string androidID = info.second;
             if(device.getIdentifier() == androidID)
             {
                 deviceFound = true;
@@ -924,4 +924,36 @@ bool Controller::checkInstallTableExist(sqlite3 *db)
         RETURN_ON_SQL_ERROR(false)
     }
     return true;
+}
+
+std::map<std::string, std::string> Controller::getConnectedAndroidInfos()
+{
+    std::map<std::string, std::string> infos;
+    /*For Android, we can't read connected USB devices, because there is no way to differentiate an Android from other things (hub, mouse, keyboard ...).
+     Instead, use ADB, which is slow as fuck. And of course, it doesn't return the Android ID, but a useless "Serial Number", which is NOT A FUCKING SERIAL NUMBER, because some manufacturer are too lazy to change it.
+     So hope that you don't have 2 devices from a lazy manufacturer and use ADB SHELL to get the real Android ID with some mumbo jumbo, and hope Google doesn't decide to remove that access in the future...*/
+    
+    //Weird problem: on some environments, it is required to double the \ around 'android_id', and on another it is required not to. Also, the execResult seems to vary a bit at each run, to make things even harder....
+    std::vector<std::string> execResult = exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\\'android_id\\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone");
+    bool wrongQuery = false;
+    for(std::string line : execResult)
+    {
+        if(line.find("android.database.sqlite.SQLiteException") != std::string::npos
+           || line.find("at dalvik.system.NativeStart.main") != std::string::npos
+           || line.find("SELECT name, value FROM secure WHERE") != std::string::npos)
+        {
+            wrongQuery = true;
+        }
+    }
+    if(wrongQuery)
+    {
+        execResult = exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone");
+    }
+    for(std::string serialAndAndroidID : execResult)
+    {
+        std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
+        std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
+        infos.insert(std::pair<std::string, std::string>(serial, androidID));
+    }
+    return infos;
 }
