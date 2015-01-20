@@ -380,7 +380,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                 deviceFound = true;
                 if(option == Reinstall)
                 { //Uninstall app first. Don't use the method as it would re-run the serial detection, which is very time consuming
-                    std::vector<std::string> appInstalledResult = exec("adb shell pm list packages | grep " + app.getIdentifier());
+                    std::vector<std::string> appInstalledResult = exec("adb -s " + serial + " shell pm list packages | grep " + app.getIdentifier());
                     bool appInstalled = appInstalledResult.size() > 0;
                     if(appInstalled)
                     {
@@ -524,7 +524,7 @@ bool Controller::performUninstall(App app, Device device)
             if(device.getIdentifier() == androidID)
             {
                 deviceFound = true;
-                std::vector<std::string> appInstalledResult = exec("adb shell pm list packages | grep " + app.getIdentifier());
+                std::vector<std::string> appInstalledResult = exec("adb -s " + serial + " shell pm list packages | grep " + app.getIdentifier());
                 bool appInstalled = appInstalledResult.size() > 0;
                 if(appInstalled)
                 {
