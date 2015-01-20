@@ -399,15 +399,18 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                 }
                 std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath);
                 std::string success = "Success";
-                std::string execResult = results.at(results.size() - 1);
-                if(execResult.compare(0, success.length(), success) == 0)
+                for(std::string execResult : results)
                 {
-                    appInstalled = true;
+                    if(execResult.compare(0, success.length(), success) == 0)
+                    {
+                        appInstalled = true;
+                    }
                 }
-                else
+                if(!appInstalled)
                 {
+                    std::string execResult = results.at(results.size() - 1);
                     if(execResult.find("[INSTALL_FAILED_VERSION_DOWNGRADE]") != std::string::npos
-                           || execResult.find("[INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]") != std::string::npos)
+                       || execResult.find("[INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]") != std::string::npos)
                     {
                         bool shouldReinstall = option == Force;
                         if(!shouldReinstall)
