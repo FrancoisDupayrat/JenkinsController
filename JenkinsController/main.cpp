@@ -115,10 +115,10 @@ int main(int argc, const char * argv[])
                 std::cout << "Configure Jenkins location\n";
                 std::cout << "Usage: jc configure -v\n";
                 std::cout << "  -v to see current configuration\n";
-                std::cout << "Usage: jc configure local [PATH]\n";
+                std::cout << "Usage: jc configure local [PATH] [Expansion PATH]\n";
                 std::cout << "  local to set as a local Jenkins install, by specifing the apps folder is at [PATH].\n";
                 std::cout << "  the apps must have format [app-name].(apk/ipa)\n";
-                std::cout << "Usage: jc configure remote [URL]\n";
+                std::cout << "Usage: jc configure remote [URL] [Expansion URL]\n";
                 std::cout << "  remote to set as a remote Jenkins install, by specifing [URL]\n";
             }
             else if(commandDetail == "register")
@@ -427,14 +427,14 @@ int main(int argc, const char * argv[])
             if(commandDetail == "-v")
             {
                 jc::Configuration conf = controller->getConfiguration();
-                std::cout << "Configuration: "  << (conf.isLocal() ? "local\nApp folder: " : "remote\nURL: ") << conf.getURL() << "\n";
+                std::cout << "Configuration: "  << (conf.isLocal() ? "local\nApp folder: " : "remote\nURL: ") << conf.getURL() << "\nExpansion: " << conf.getExpansionURL() << "\n";
             }
-            else if((commandDetail == "local" || commandDetail == "remote") && argc >= 4)
+            else if((commandDetail == "local" || commandDetail == "remote") && argc >= 5)
             {
-                if(controller->setConfig(commandDetail == "local", argv[3]))
+                if(controller->setConfig(commandDetail == "local", argv[3], argv[4]))
                 {
                     jc::Configuration conf = controller->getConfiguration();
-                    std::cout << "Configuration updated\nConfiguration: "  << (conf.isLocal() ? "local\nApp folder: " : "remote\nURL: ") << conf.getURL() << "\n";
+                    std::cout << "Configuration updated\nConfiguration: "  << (conf.isLocal() ? "local\nApp folder: " : "remote\nURL: ") << conf.getURL() << "\nExpansion: " << conf.getExpansionURL() << "\n";
                 }
                 else
                 {

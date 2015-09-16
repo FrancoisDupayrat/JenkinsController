@@ -23,14 +23,16 @@ public:
     Configuration();
     Configuration(Configuration const& copy);
     bool isLocal() const;
-    void setLocal(std::string url);
-    void setRemote(std::string url);
+    void setLocal(std::string url, std::string expansionUrl);
+    void setRemote(std::string url, std::string expansionUrl);
     std::string getURL() const;
+    std::string getExpansionURL() const;
     void setID(unsigned long id_);
     unsigned long getID() const;
 private:
     bool local;
     std::string url;
+    std::string expansionUrl;
     unsigned long id_;
 };
 

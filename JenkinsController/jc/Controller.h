@@ -58,7 +58,7 @@ public:
     std::vector<Install> getAllAppInstall(std::string appName);
     std::vector<Install> getAllDeviceInstall(std::string deviceName);
     
-    bool setConfig(bool local, std::string url);
+    bool setConfig(bool local, std::string url, std::string expansionUrl);
     Configuration getConfiguration();
 private:
     Controller();

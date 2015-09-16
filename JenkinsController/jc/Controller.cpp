@@ -470,6 +470,19 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                         installError += execResult;
                     }
                 }
+                
+                // Pushing the expansion
+                std::vector<std::string> expansions = exec("ls " + conf->getExpansionURL() + "/" + app.getName() + "/*.obb");
+                for(std::string expansion : expansions)
+                {
+                    std::string obbFile =  expansion.substr(conf->getExpansionURL().length() + 1 + app.getName().length() + 1);
+                    std::cout << "Pushing expansion " + obbFile + " to device\n";
+                    std::vector<std::string> obbResults = exec("adb push " + expansion + " " + "/mnt/shell/emulated/obb/" + app.getIdentifier()  + "/" + obbFile);
+                    if(obbResults.size() != 0)
+                    {
+                        std::cout << "There was a problem with the push of the expansion\n";
+                    }
+                }
             }
         }
     }
@@ -708,7 +721,7 @@ std::vector<Install> Controller::getAllDeviceInstall(std::string deviceName)
 }
 
 
-bool Controller::setConfig(bool local, std::string url)
+bool Controller::setConfig(bool local, std::string url, std::string expansionUrl)
 {
     sqlite3 *db;
     if((db = openDB()) == nullptr) return false;
@@ -716,14 +729,15 @@ bool Controller::setConfig(bool local, std::string url)
     
     if(local)
     {
-        conf->setLocal(url);
+        conf->setLocal(url, expansionUrl);
     }
     else
     {
-        conf->setRemote(url);
+        conf->setRemote(url, expansionUrl);
     }
+    
     int result = sqlite3_exec(db,
-                              ("UPDATE configuration SET LOCAL=" + std::string(conf->isLocal() ? "1" : "0") + ", URL='" + conf->getURL() + "' WHERE ID='" + std::to_string(conf->getID()) + "';").c_str(),
+                              ("UPDATE configuration SET LOCAL=" + std::string(conf->isLocal() ? "1" : "0") + ", URL='" + conf->getURL() + "', EXPANSIONURL='" + conf->getExpansionURL() + "' WHERE ID='" + std::to_string(conf->getID()) + "';").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -774,6 +788,7 @@ bool Controller::loadConfiguration()
                               "CREATE TABLE configuration("  \
                               "ID INT PRIMARY KEY     NOT NULL," \
                               "URL            TEXT    NOT NULL," \
+                              "EXPANSIONURL   TEXT    NOT NULL," \
                               "LOCAL          INT     NOT NULL," \
                               "VERSION        INT     NOT NULL);",
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
@@ -782,7 +797,7 @@ bool Controller::loadConfiguration()
         RETURN_ON_SQL_ERROR(false)
         
         result = sqlite3_exec(db,
-                              ("INSERT INTO configuration (ID, URL, LOCAL, VERSION) VALUES (" + std::to_string(conf->getID()) + ", '" + conf->getURL() + "', " + std::string(conf->isLocal() ? "1" : "0")  + ", " CONFIGURATION_VERSION ");").c_str(),
+                              ("INSERT INTO configuration (ID, URL, EXPANSIONURL, LOCAL, VERSION) VALUES (" + std::to_string(conf->getID()) + ", '" + conf->getURL() + ", '" + conf->getExpansionURL() + "', " + std::string(conf->isLocal() ? "1" : "0")  + ", " CONFIGURATION_VERSION ");").c_str(),
                               [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
                               0,
                               &errorMessage);
@@ -791,6 +806,36 @@ bool Controller::loadConfiguration()
     }
     else
     {
+        bool expansionUrlColumn = false;
+        result = sqlite3_exec(db,
+                              "PRAGMA table_info('configuration');",
+                              [](void *expansionUrlColumn, int argc, char **argv, char **azColName)
+                              {
+                                  for (int i = 0; i < argc; i++)
+                                  {
+                                      if(std::strcmp(azColName[i], "name") == 0 && std::strcmp(argv[i] ? argv[i] : "NULL", "EXPANSIONURL") == 0)
+                                      {
+                                          *(bool*)expansionUrlColumn = true;
+                                      }
+                                  }
+                                  return 0;
+                              },
+                              &expansionUrlColumn,
+                              &errorMessage);
+        // SEQ FAULT
+        RETURN_ON_SQL_ERROR(false)
+        
+        if(!expansionUrlColumn)
+        {
+            result = sqlite3_exec(db,
+                                  "ALTER TABLE configuration ADD COLUMN EXPANSIONURL TEXT NOT NULL",
+                                  [](void *hasResult, int argc, char **argv, char **azColName) { return 0; },
+                                  0,
+                                  &errorMessage);
+            
+            RETURN_ON_SQL_ERROR(false)
+        }
+        
         result = sqlite3_exec(db,
                               "SELECT * from configuration",
                               [](void *conf, int argc, char **argv, char **azColName)
@@ -798,11 +843,11 @@ bool Controller::loadConfiguration()
                                   ((Configuration*)conf)->setID(atoi(argv[0]));
                                   if(atoi(argv[2]))
                                   {
-                                      ((Configuration*)conf)->setLocal(std::string(argv[1]));
+                                      ((Configuration*)conf)->setLocal(std::string(argv[1]), std::string(argv[4]));
                                   }
                                   else
                                   {
-                                      ((Configuration*)conf)->setRemote(std::string(argv[1]));
+                                      ((Configuration*)conf)->setRemote(std::string(argv[1]), std::string(argv[4]));
                                   }
                                   
                                   if(strcmp(CONFIGURATION_VERSION, argv[3]) != 0)
