@@ -477,7 +477,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                 {
                     std::string obbFile =  expansion.substr(conf->getExpansionURL().length() + 1 + app.getName().length() + 1);
                     std::cout << "Pushing expansion " + obbFile + " to device\n";
-                    std::vector<std::string> obbResults = exec("adb push " + expansion + " " + "/mnt/shell/emulated/obb/" + app.getIdentifier()  + "/" + obbFile);
+                    std::vector<std::string> obbResults = exec("adb -s " + serial + " push " + expansion + " " + "/mnt/shell/emulated/obb/" + app.getIdentifier()  + "/" + obbFile);
                     if(obbResults.size() != 0)
                     {
                         std::cout << "There was a problem with the push of the expansion\n";
