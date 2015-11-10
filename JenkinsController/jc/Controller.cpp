@@ -386,14 +386,21 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                     {
                         std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
                         std::string success = "Success";
-                        std::string execResult = results.at(results.size() - 1);
-                        if(execResult.compare(0, success.length(), success) != 0)
+                        if(results.size() == 0)
                         {
-                            installError = execResult + "\n";
+                            installError = "adb uninstall didn't return Success, trying to reinstall anyway...\n";
                         }
                         else
                         {
-                            std::cout << "App uninstalled, reinstalling...\n";
+                            std::string execResult = results.at(results.size() - 1);
+                            if(execResult.compare(0, success.length(), success) != 0)
+                            {
+                                installError = execResult + "\n";
+                            }
+                            else
+                            {
+                                std::cout << "App uninstalled, reinstalling...\n";
+                            }
                         }
                     }
                 }
@@ -406,7 +413,11 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                         appInstalled = true;
                     }
                 }
-                if(!appInstalled)
+                if(!appInstalled && results.size() == 0)
+                {
+                    installError += "adb install didn't return anything, cannot determine if the app was installed.\n";
+                }
+                else if(!appInstalled)
                 {
                     std::string execResult = results.at(results.size() - 1);
                     if(execResult.find("[INSTALL_FAILED_VERSION_DOWNGRADE]") != std::string::npos
@@ -472,7 +483,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                 }
                 
                 // Pushing the expansion
-                std::vector<std::string> expansions = exec("ls " + conf->getExpansionURL() + "/" + app.getName() + "/*.obb");
+                std::vector<std::string> expansions = exec("ls " + conf->getExpansionURL() + "/" + app.getName() + "/*.obb 2> /dev/null");
                 for(std::string expansion : expansions)
                 {
                     std::string obbFile =  expansion.substr(conf->getExpansionURL().length() + 1 + app.getName().length() + 1);
