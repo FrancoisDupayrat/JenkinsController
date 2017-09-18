@@ -384,7 +384,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                     bool appInstalled = appInstalledResult.size() > 0;
                     if(appInstalled)
                     {
-                        std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
+                        std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier() + " 2>&1");
                         std::string success = "Success";
                         if(results.size() == 0)
                         {
@@ -404,7 +404,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                         }
                     }
                 }
-                std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath);
+                std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath + " 2>&1");
                 std::string success = "Success";
                 for(std::string execResult : results)
                 {
@@ -452,7 +452,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                         }
                         if(shouldReinstall)
                         {
-                            std::vector<std::string> uninstallResults = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
+                            std::vector<std::string> uninstallResults = exec("adb -s " + serial + " uninstall " + app.getIdentifier() + " 2>&1");
                             std::string success = "Success";
                             std::string execResult = uninstallResults.at(uninstallResults.size() - 1);
                             if(execResult.compare(0, success.length(), success) != 0)
@@ -464,7 +464,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                                 std::cout << "App uninstalled, reinstalling...\n";
                             }
                             
-                            std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath);
+                            std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath + " 2>&1");
                             execResult = results.at(results.size() - 1);
                             if(execResult.compare(0, success.length(), success) == 0)
                             {
@@ -570,7 +570,7 @@ bool Controller::performUninstall(App app, Device device)
                 bool appInstalled = appInstalledResult.size() > 0;
                 if(appInstalled)
                 {
-                    std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier());
+                    std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier() + " 2>&1");
                     std::string success = "Success";
                     std::string execResult = results.at(results.size() - 1);
                     if(execResult.compare(0, success.length(), success) == 0)
