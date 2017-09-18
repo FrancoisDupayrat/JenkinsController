@@ -489,10 +489,24 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                     std::string obbFile =  expansion.substr(conf->getExpansionURL().length() + 1 + app.getName().length() + 1);
                     std::cout << "Pushing expansion " + obbFile + " to device\n";
                     std::vector<std::string> pathResults = exec("adb -s " + serial + " shell echo \\$EXTERNAL_STORAGE | tr -d \"\\n\\r\"");
-                    std::vector<std::string> obbResults = exec("adb -s " + serial + " push " + expansion + " " + pathResults[0] + "/Android/obb/" + app.getIdentifier()  + "/" + obbFile);
-                    if(obbResults.size() != 0)
+                    
+                    // Work-around with problem in Android >= 6.0 that you can't push directly to data or obb folders
+                    std::string pushExpansionPath = pathResults[0] + "/jc-push-expansions/" + obbFile;
+                    std::string expansionFinalPath = pathResults[0] + "/Android/obb/" + app.getIdentifier()  + "/" + obbFile;
+                    
+                    // For both commands, redirect stdout to null because we are only interested by errors
+                    std::vector<std::string> pushResults = exec("adb -s " + serial + " push " + expansion + " " + pushExpansionPath + " > /dev/null");
+                    if(pushResults.size() != 0)
                     {
-                        std::cout << "There was a problem with the push of the expansion\n";
+                        std::cout << "There was a problem with the push of the expansion: " << pushResults[0] << "\n";
+                    }
+                    else
+                    {
+                        std::vector<std::string> moveResults = exec("adb -s " + serial + " shell mv " + pushExpansionPath + " " + expansionFinalPath + " > /dev/null");
+                        if(moveResults.size() != 0)
+                        {
+                            std::cout << "There was a problem with the move of the expansion " << moveResults[0] << "\n";
+                        }
                     }
                 }
             }
