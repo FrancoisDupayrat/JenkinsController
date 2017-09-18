@@ -1023,10 +1023,16 @@ std::map<std::string, std::string> Controller::getConnectedAndroidInfos()
     {
         execResult = exec("for serial in $(adb devices | sed s/\\	.*// | sed \"1 d\");do\necho ${serial},$(adb -s ${serial} shell content query --uri content://settings/secure --projection name:value --where \"name=\'android_id\'\" | sed s/Row:\\ [0-9]*\\ name=android_id,\\ value=//)\ndone");
     }
+    
     for(std::string serialAndAndroidID : execResult)
     {
+        // Remove \n and \n from the string, which cause some problems
+        serialAndAndroidID.erase(std::remove(serialAndAndroidID.begin(), serialAndAndroidID.end(), '\r'), serialAndAndroidID.end());
+        serialAndAndroidID.erase(std::remove(serialAndAndroidID.begin(), serialAndAndroidID.end(), '\n'), serialAndAndroidID.end());
+        
+        //Split the string into serial and Android ID
         std::string serial = serialAndAndroidID.substr(0, serialAndAndroidID.find(","));
-        std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 2);
+        std::string androidID = serialAndAndroidID.substr(serialAndAndroidID.find(",") + 1, serialAndAndroidID.length() - serialAndAndroidID.find(",") - 1);
         infos.insert(std::pair<std::string, std::string>(serial, androidID));
     }
     return infos;
