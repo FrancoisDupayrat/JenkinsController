@@ -502,6 +502,9 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                     }
                     else
                     {
+                        //Ensure directory exist
+                        exec("adb -s " + serial + " shell mkdir -p " + expansionFinalPath + " > /dev/null");
+                        
                         std::vector<std::string> moveResults = exec("adb -s " + serial + " shell mv " + pushExpansionPath + " " + expansionFinalPath + " > /dev/null");
                         if(moveResults.size() != 0)
                         {
