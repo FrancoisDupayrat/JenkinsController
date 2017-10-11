@@ -492,7 +492,7 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                     
                     // Work-around with problem in Android >= 6.0 that you can't push directly to data or obb folders
                     std::string pushExpansionPath = pathResults[0] + "/jc-push-expansions/" + obbFile;
-                    std::string expansionFinalPath = pathResults[0] + "/Android/obb/" + app.getIdentifier()  + "/" + obbFile;
+                    std::string expansionFinalPath = pathResults[0] + "/Android/obb/" + app.getIdentifier()  + "/";
                     
                     // For both commands, redirect stdout to null because we are only interested by errors
                     std::vector<std::string> pushResults = exec("adb -s " + serial + " push " + expansion + " " + pushExpansionPath + " > /dev/null");
