@@ -291,9 +291,8 @@ std::vector<Device> Controller::getConnectedDevices()
     if(!checkDeviceTableExist(db)) return connectedDevice;
     char *errorMessage = 0;
     std::vector<Device> matchingDevices;
-    for(int i = 0; i < connectedDevice.size(); i++)
+    for(Device& d : connectedDevice)
     {
-        Device& d = connectedDevice.at(i);
         sqlite3_exec(db,
                      ("SELECT * FROM device WHERE ID='" + d.getIdentifier() + "';").c_str(),
                      [](void *ptr, int argc, char **argv, char **azColName)
@@ -388,11 +387,10 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                         std::string success = "Success";
                         if(results.size() == 0)
                         {
-                            installError = "adb uninstall didn't return Success, trying to reinstall anyway...\n";
+                            installError = "adb uninstall didn't return anything, trying to reinstall anyway...\n";
                         }
-                        else
+                        for(std::string execResult : results)
                         {
-                            std::string execResult = results.at(results.size() - 1);
                             if(execResult.compare(0, success.length(), success) != 0)
                             {
                                 installError = execResult + "\n";
@@ -419,66 +417,74 @@ bool Controller::performInstall(App app, Device device, InstallOption option)
                 }
                 else if(!appInstalled)
                 {
-                    std::string execResult = results.at(results.size() - 1);
-                    if(execResult.find("[INSTALL_FAILED_VERSION_DOWNGRADE]") != std::string::npos
-                       || execResult.find("[INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]") != std::string::npos)
+                    for(std::string execResult : results)
                     {
-                        bool shouldReinstall = option == Force;
-                        if(!shouldReinstall)
+                        if(execResult.find("[INSTALL_FAILED_VERSION_DOWNGRADE]") != std::string::npos
+                           || execResult.find("[INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]") != std::string::npos)
                         {
-                            std::string userInput;
-                            do
+                            bool shouldReinstall = option == Force;
+                            if(!shouldReinstall)
                             {
-                                if (userInput != "") std::cout << "Invalid input. ";
-                                std::cout << "Cannot do an update, reason: " << execResult << "\nDo you want to reinstall the app? [y/n]\n";
-                                std::cin >> userInput;
-                                std::transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
-                            }while (userInput != "yes"
-                                    && userInput != "no"
-                                    && userInput != "y"
-                                    && userInput != "n");
-                            if(userInput == "yes" || userInput == "y")
-                            {
-                                shouldReinstall = true;
+                                std::string userInput;
+                                do
+                                {
+                                    if (userInput != "") std::cout << "Invalid input. ";
+                                    std::cout << "Cannot do an update, reason: " << execResult << "\nDo you want to reinstall the app? [y/n]\n";
+                                    std::cin >> userInput;
+                                    std::transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
+                                }while (userInput != "yes"
+                                        && userInput != "no"
+                                        && userInput != "y"
+                                        && userInput != "n");
+                                if(userInput == "yes" || userInput == "y")
+                                {
+                                    shouldReinstall = true;
+                                }
+                                else
+                                {
+                                    installError = "App cannot be updated, you refused the resintall.";
+                                }
                             }
                             else
                             {
-                                installError = "App cannot be updated, you refused the resintall.";
+                                std::cout << "Can't update app, starting reinstall...\n";
+                            }
+                            if(shouldReinstall)
+                            {
+                                std::vector<std::string> uninstallResults = exec("adb -s " + serial + " uninstall " + app.getIdentifier() + " 2>&1");
+                                std::string success = "Success";
+                                std::string execResult = uninstallResults.at(uninstallResults.size() - 1);
+                                if(execResult.compare(0, success.length(), success) != 0)
+                                {
+                                    installError = execResult + "\n";
+                                }
+                                else
+                                {
+                                    std::cout << "App uninstalled, reinstalling...\n";
+                                }
+                                
+                                std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath + " 2>&1");
+                                if(results.size() == 0)
+                                {
+                                    installError = "adb install -r didn't return anything after forcing uninstall because of incompatibility.\n";
+                                }
+                                for(std::string execResult : results)
+                                {
+                                    if(execResult.compare(0, success.length(), success) == 0)
+                                    {
+                                        appInstalled = true;
+                                    }
+                                    else
+                                    {
+                                        installError += execResult + "\n";
+                                    }
+                                }
                             }
                         }
                         else
                         {
-                            std::cout << "Can't update app, starting reinstall...\n";
+                            installError += execResult;
                         }
-                        if(shouldReinstall)
-                        {
-                            std::vector<std::string> uninstallResults = exec("adb -s " + serial + " uninstall " + app.getIdentifier() + " 2>&1");
-                            std::string success = "Success";
-                            std::string execResult = uninstallResults.at(uninstallResults.size() - 1);
-                            if(execResult.compare(0, success.length(), success) != 0)
-                            {
-                                installError = execResult + "\n";
-                            }
-                            else
-                            {
-                                std::cout << "App uninstalled, reinstalling...\n";
-                            }
-                            
-                            std::vector<std::string> results = exec("adb -s " + serial + " install -r " + appPath + " 2>&1");
-                            execResult = results.at(results.size() - 1);
-                            if(execResult.compare(0, success.length(), success) == 0)
-                            {
-                                appInstalled = true;
-                            }
-                            else
-                            {
-                                installError += execResult;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        installError += execResult;
                     }
                 }
                 
@@ -572,14 +578,20 @@ bool Controller::performUninstall(App app, Device device)
                 {
                     std::vector<std::string> results = exec("adb -s " + serial + " uninstall " + app.getIdentifier() + " 2>&1");
                     std::string success = "Success";
-                    std::string execResult = results.at(results.size() - 1);
-                    if(execResult.compare(0, success.length(), success) == 0)
+                    if(results.size() == 0)
                     {
-                        appUninstalled = true;
+                        uninstallError = "adb uninstall didn't return anything\n";
                     }
-                    else
+                    for(std::string execResult : results)
                     {
-                        uninstallError = execResult;
+                        if(execResult.compare(0, success.length(), success) == 0)
+                        {
+                            appUninstalled = true;
+                        }
+                        else
+                        {
+                            uninstallError += execResult + "\n";
+                        }
                     }
                 }
                 else
